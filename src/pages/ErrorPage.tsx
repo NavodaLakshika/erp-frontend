@@ -20,7 +20,7 @@ function ErrorPage({
   handleLogin 
 }: ErrorPageProps) {
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-black rounded-lg p-8 sm:p-12">
           <div className="flex justify-center mb-6">

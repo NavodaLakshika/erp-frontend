@@ -20,35 +20,37 @@ function LoginPage({
   handleLogin 
 }: LoginPageProps) {
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full  max-w-md">
         <div className="bg-black rounded-lg p-8 sm:p-12">
-          <Logo />
+          <div className="mb-[-70px]"> {/* reduced gap here */}
+  <Logo />
+</div>
 
           <div>
             <div className="mb-6">
-              <label className="block text-white text-sm mb-2">User Name*</label>
+              <label className="block text-white text-sm mb-1 ml-2">User Name *</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-full bg-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-5  py-1 rounded-full bg-white text-black focus:outline-none "
               />
             </div>
 
             <div className="mb-6">
-              <label className="block text-white text-sm mb-2">Password*</label>
+              <label className="block text-white text-sm mb-1 ml-2">Password *</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-full bg-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-5 py-1 rounded-full bg-white text-black focus:outline-none"
               />
             </div>
 
             <button
               onClick={handleLogin}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-full transition-colors mb-4"
+              className="w-30 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-full transition-colors mb-4 ml-29"
             >
               Login
             </button>
