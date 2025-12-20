@@ -12,6 +12,8 @@ const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+const [showAddCustomer, setShowAddCustomer] = useState(false);
 
 const loadCustomers = async () => {
   try {
@@ -123,22 +125,16 @@ const loadCustomers = async () => {
               Cancel
             </button>
             <button 
-            disabled={!selected}
-            onClick={() => selected && onSelect(selected)}
+           disabled={!selected}
+  onClick={() => selected && onSelect(selected)}
             className="px-5 sm:px-6 h-9 sm:h-11 bg-gradient-to-b from-[#0E7A2A] to-[#064C18] text-white rounded-full font-medium text-sm sm:text-base hover:from-[#0E8A2A] hover:to-[#065C18] transition-all">
-              Select Customer
+           Select Customer
             </button>
           </div>
         </div>
 
         {/* TITLE - Same style as RecallInvoice */}
-        <div className="absolute -bottom-8 sm:-bottom-10 left-0 right-0 text-center">
-          <div className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text">
-            <span className="text-lg sm:text-xl md:text-2xl font-bold text-transparent">
-              Add Customer
-            </span>
-          </div>
-        </div>
+        
       </div>
     </div>
   );

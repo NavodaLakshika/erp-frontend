@@ -18,10 +18,9 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
+const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  function setSelectedCustomer(customer: Customer) {
-    throw new Error("Function not implemented.");
-  }
+
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
@@ -108,12 +107,16 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
             {/* Right Side Info */}
             <div className="flex-1 text-xs sm:text-[20px] text-white ml-12">
               <div className="flex flex-col sm:flex-row mb-2">
-                <span className="font-semibold w-24 sm:w-28">Bill For</span>
-                <span>
-                  : <span className="text-blue-700 font-bold">Ranga Madhushan</span>
-                </span>
-              </div>
-
+  <span className="font-semibold w-24 sm:w-28">Bill For</span>
+  <span>
+    :{" "}
+    <span className="text-blue-700 font-bold">
+      {selectedCustomer
+        ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}`
+        : "Select Customer"}
+    </span>
+  </span>
+</div>
               <div className="flex flex-col sm:flex-row mb-2">
                 <span className="font-semibold w-24 sm:w-28">Bill No</span>
                 <span>
