@@ -12,10 +12,9 @@ function MenuCard({ title, bgColor, icon, onClick }: MenuCardProps) {
     <div className="flex flex-col items-center cursor-pointer" onClick={onClick}>
       <div
         className={`${bgColor} 
-        w-[296px] h-[276px] 
-        rounded-[100px] 
-        flex items-center justify-center 
-        shadow-lg`}
+        w-[206px] h-[186px] 
+        rounded-[60px] 
+        flex items-center justify-center `}
       >
         {icon}
       </div>

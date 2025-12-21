@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MenuCard from "../components/MenuCard";
 import ViewStock from "./ViewStock";
@@ -6,26 +6,43 @@ import ViewStock from "./ViewStock";
 
 
 function MainMenu() {
+  const [username, setUsername] = useState<string | null>(null);
   const navigate = useNavigate();
   const [showViewStock, setShowViewStock] = useState(false);
 
+ useEffect(() => {
+  const storedUsername = localStorage.getItem("username");
+  if (storedUsername) {
+    setUsername(storedUsername);
+  } else {
+    // If no username, redirect back to login
+    navigate("/login");
+  }
+}, [navigate]);
+
+  
   if (showViewStock) {
     return <ViewStock goBack={() => setShowViewStock(false)} />;
   }
 
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex flex-col items-center py-10">
       <div className="w-full max-w-md">
-        <div className="bg-black rounded-lg p-8 sm:p-12">
+        <div className="bg-black rounded-lg p-8 ">
           <div className="flex justify-center mb-6">
            
           </div>
-            <h2 className="text-white text-2xl sm:text-3xl font-bold text-center mb-25">
-             {/* Hello {username}*/} Hello Demo  
-          </h2>
+{username && (
+  <h2 className="text-white text-2xl sm:text-3xl font-bold text-center mb-10">
+    Hello {username}!
+  </h2>
+)}
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-80 justify-items-center">
+
+      
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-7 sm:gap-50 justify-items-center">
  
   <MenuCard
     title="Report Time"
@@ -34,7 +51,7 @@ function MainMenu() {
       <img
       src="/report-time.png"  
       alt="Report Time"
-      className=" h-45 object-contain mx-auto"
+      className=" h-35 object-contain mx-auto"
     />
     }
   
@@ -49,7 +66,7 @@ function MainMenu() {
       <img
       src="/leave.png"  
       alt="Apply Leave"
-      className=" h-45 object-contain mx-auto"
+      className=" h-35 object-contain mx-auto"
     />
    }
 
@@ -58,7 +75,7 @@ function MainMenu() {
 
 
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-80 justify-items-center mt-15">
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-7 sm:gap-50 justify-items-center mt-15">
   <MenuCard
     title="Point Of Sales"
     bgColor="bg-white"
@@ -67,7 +84,7 @@ function MainMenu() {
       <img
       src="/cashier.png"  
       alt="Point Of Sales"
-      className=" h-45 object-contain mx-auto"
+      className=" h-35 object-contain mx-auto"
       onClick={() => navigate("/pos")}
 
     />
@@ -83,7 +100,7 @@ function MainMenu() {
       <img
       src="/inventory.png"  
       alt="View Stock"
-      className=" h-45 object-contain mx-auto"
+      className=" h-35 object-contain mx-auto"
     />
    }
 
