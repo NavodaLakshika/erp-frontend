@@ -39,7 +39,7 @@ function MainMenu() {
 
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center py-10">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center py-10">
       <div className="w-full max-w-md">
         <div className="bg-black rounded-lg p-8 ">
           <div className="flex justify-center mb-6">
