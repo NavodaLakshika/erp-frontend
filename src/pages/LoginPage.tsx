@@ -27,7 +27,7 @@ function LoginPage() {
     setLoading(true);
 ``
     try {
-      const res = await api.post("/api/auth/login", { username, password });
+      const res = await api.post("/auth/login", { username, password });
       localStorage.setItem("token", res.data.access_token);
       localStorage.setItem("username", username);
       localStorage.setItem("loginSuccess", "true");
@@ -46,7 +46,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex item-center justify-center   relative">
+    <div className="min-h-screen bg-black flex items-center justify-center ml-[-50px] ">
       {showRedirectLoader && <Loader fullScreen={true} />}
       
       <div className="w-full max-w-md">
@@ -77,7 +77,7 @@ function LoginPage() {
                 value={username}
                 onChange={(e) => { setUsername(e.target.value); setError(false); }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-5 py-3 rounded-full text-black focus:outline-none ${
+                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
                   error ? "bg-red-100 border-2 border-red-500" : "bg-white"
                 } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -92,7 +92,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(false); }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-5 py-3 rounded-full text-black focus:outline-none ${
+                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
                   error ? "bg-red-100 border-2 border-red-500" : "bg-white"
                 } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
