@@ -15,19 +15,19 @@ const RecallInvoice = ({ onClose }: RecallInvoiceProps) => {
       <div className="relative w-full max-w-2xl lg:max-w-4xl bg-[#D9D9D9] rounded-xl  p-4 sm:p-6 shadow-2xl">
 
         {/* Search - Responsive */}
-       <div className="flex items-center bg-white rounded-full px-4 sm:px-6 py-2 sm:py-2 mb-4 sm:mb-3">
-  <img
-    src="/search.png"
-    alt="Search"
-    className="w-5 h-5 sm:mt-2 sm:w-5 sm:h-5 mr-2 sm:mr-3 "
-  />
+        <div className="flex items-center bg-white rounded-full px-4 sm:px-6 py-2 sm:py-2 mb-4 sm:mb-3">
+          <img
+            src="/search.png"
+            alt="Search"
+            className="w-5 h-5 sm:mt-2 sm:w-5 sm:h-5 mr-2 sm:mr-3 "
+          />
 
-  <input
-    type="text"
-    placeholder="Search Invoice..."
-    className="w-full outline-none text-sm sm:text-base bg-transparent placeholder:text-gray-500"
-  />
-</div>
+          <input
+            type="text"
+            placeholder="Search Invoice..."
+            className="w-full outline-none text-sm sm:text-base bg-transparent placeholder:text-gray-500"
+          />
+        </div>
 
 
         {/* TABLE - Responsive */}
@@ -75,7 +75,7 @@ const RecallInvoice = ({ onClose }: RecallInvoiceProps) => {
 
           {/* Action Buttons */}
           <div className="flex gap-3 sm:gap-4">
-           
+
             <button className="px-5 sm:px-6 h-9 sm:h-11 bg-[#05522B] text-white rounded-full font-medium text-sm sm:text-base hover:from-[#0E8A2A] hover:to-[#065C18] transition-all">
               Recall Invoice
             </button>
@@ -83,7 +83,7 @@ const RecallInvoice = ({ onClose }: RecallInvoiceProps) => {
         </div>
 
         {/* TITLE */}
-       
+
       </div>
     </div>
   );

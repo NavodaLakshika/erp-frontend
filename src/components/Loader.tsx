@@ -19,9 +19,8 @@ const Loader: React.FC<LoaderProps> = ({
 
   const loader = (
     <div
-      className={`${sizeClasses[size]} border-4 ${
-        color === 'white' ? 'border-white' : 'border-blue-500'
-      } border-t-transparent rounded-full animate-spin`}
+      className={`${sizeClasses[size]} border-4 ${color === 'white' ? 'border-white' : 'border-blue-500'
+        } border-t-transparent rounded-full animate-spin`}
     />
   );
 

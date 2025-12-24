@@ -18,7 +18,7 @@ function MenuCard({ title, bgColor, icon, onClick }: MenuCardProps) {
       >
         {icon}
       </div>
-      
+
       <p className="mt-2 text-white text-[25px] font-semibold text-center">
         {title}
       </p>

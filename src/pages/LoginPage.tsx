@@ -25,7 +25,7 @@ function LoginPage() {
     setError(false);
     setSuccessMsg(false);
     setLoading(true);
-``
+    ``
     try {
       const res = await api.post("/auth/login", { username, password });
       localStorage.setItem("token", res.data.access_token);
@@ -48,7 +48,7 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center ml-[-50px] ">
       {showRedirectLoader && <Loader fullScreen={true} />}
-      
+
       <div className="w-full max-w-md">
         {error && (
           <div className="w-80 bg-red-500 text-white px-4 py-2.5 rounded-full text-[18px] font-medium text-center  mt-4 ml-24">
@@ -77,9 +77,8 @@ function LoginPage() {
                 value={username}
                 onChange={(e) => { setUsername(e.target.value); setError(false); }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
-                  error ? "bg-red-100 border-2 border-red-500" : "bg-white"
-                } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${error ? "bg-red-100 border-2 border-red-500" : "bg-white"
+                  } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
 
@@ -92,18 +91,16 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(false); }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
-                  error ? "bg-red-100 border-2 border-red-500" : "bg-white"
-                } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${error ? "bg-red-100 border-2 border-red-500" : "bg-white"
+                  } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
 
             <button
               type="submit" // ✅ Enter key works with submit button
               disabled={loading || showRedirectLoader}
-              className={`w-40 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[20px] mb-4 ml-29 flex items-center justify-center ${
-                loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-              }`}
+              className={`w-40 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[20px] mb-4 ml-29 flex items-center justify-center ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                }`}
             >
               {loading ? (
                 <>

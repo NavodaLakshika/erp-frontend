@@ -6,14 +6,14 @@ interface ViewPreviousInvoiceProps {
 }
 
 const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
-  
+
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
 
   const handleRecall = () => {
     console.log("Invoice recalled");
     setShowRecallConfirm(false);
   };
-  
+
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
 
@@ -23,30 +23,30 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
           onClick={goBack}
           className="flex items-center gap-2 text-sm sm:text-base md:text-[17px] font-medium text-black"
         >
-          <img 
-            src="/Polygon.png" 
-            alt="Back" 
-            className="w-4 h-4 sm:w-5 sm:h-5" 
+          <img
+            src="/Polygon.png"
+            alt="Back"
+            className="w-4 h-4 sm:w-5 sm:h-5"
           />
           POS
         </button>
 
-        <span className="font-bold text-[15px] sm:text-xl md:text-[25px] text-black text-center">
+        <span className="font-bold text-[15px] sm:text-xl md:text-[22px] text-black text-center">
           View Previous Invoice
         </span>
 
         <button className="flex items-center gap-2 text-sm sm:text-base md:text-[17px] font-medium text-black opacity-50">
           POS
-          <img 
-            src="/Polygon 2.png" 
-            alt="Next" 
-            className="w-4 h-4 sm:w-5 sm:h-5" 
+          <img
+            src="/Polygon 2.png"
+            alt="Next"
+            className="w-4 h-4 sm:w-5 sm:h-5"
           />
         </button>
       </div>
 
       {/* TABLE CONTAINER - Responsive */}
-      <div className="w-full max-w-2xl bg-[#2F2F2F] rounded-xl sm:rounded-2xl overflow-hidden mb-4 sm:mb-6">
+      <div className="w-full max-w-2xl bg-[#2F2F2F] rounded-[10px] overflow-hidden mb-4 sm:mb-6">
 
         {/* TABLE HEADER - Responsive */}
         <div className="grid grid-cols-8 text-[10px] sm:text-xs text-white bg-[#3A3A3A] px-3 sm:px-4 py-3 sm:py-4 font-semibold">
@@ -69,10 +69,10 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
             <div className="text-center sm:text-left">2025/02/18<br />12:10PM</div>
             <div className="text-center sm:text-left">22-Harry<br />Potter</div>
             <div className="text-center sm:text-left">05 - Ron<br />Weasley</div>
-            <div className="text-center sm:text-left font-semibold text-green-400">12500</div>
-            <div className="text-center sm:text-left font-semibold text-blue-400">500</div>
+            <div className="text-center sm:text-left font-semibold">12500</div>
+            <div className="text-center sm:text-left font-semibold ">500</div>
             <div className="text-center sm:text-left">
-              <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 text-[9px] sm:text-xs">
+              <span className="px-2 py-1 rounded-full  text-[9px] sm:text-xs">
                 Pending
               </span>
             </div>
@@ -86,39 +86,8 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
             </div>
           </div>
 
-          {/* MORE SAMPLE ROWS */}
-          {[...Array(3)].map((_, i) => (
-            <div 
-              key={`sample-${i}`}
-              className="grid grid-cols-8 px-3 sm:px-4 py-3 sm:py-4 border-b border-white/10 hover:bg-white/5 transition-colors"
-            >
-              <div className="font-medium text-center sm:text-left">INV{1246 + i}</div>
-              <div className="text-center sm:text-left">2025/02/{17 - i}<br />{12 + i}:30PM</div>
-              <div className="text-center sm:text-left">{22 + i}-User{i}<br />Name{i}</div>
-              <div className="text-center sm:text-left">0{i + 1} - Customer{i}<br />Name{i}</div>
-              <div className="text-center sm:text-left font-semibold text-green-400">{12500 + (i * 1000)}</div>
-              <div className="text-center sm:text-left font-semibold text-blue-400">{500 + (i * 100)}</div>
-              <div className="text-center sm:text-left">
-                <span className={`px-2 py-1 rounded-full text-[9px] sm:text-xs ${
-                  i === 0 ? 'bg-green-500/20 text-green-300' : 
-                  i === 1 ? 'bg-red-500/20 text-red-300' : 
-                  'bg-yellow-500/20 text-yellow-300'
-                }`}>
-                  {i === 0 ? 'Paid' : i === 1 ? 'Cancelled' : 'Pending'}
-                </span>
-              </div>
-              <div className="text-center sm:text-left">
-                {i !== 1 && (
-                  <button
-                    onClick={() => setShowRecallConfirm(true)}
-                    className="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full text-[9px] sm:text-xs font-semibold hover:from-blue-600 hover:to-blue-800 transition-all"
-                  >
-                    Recall
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+
+
 
           {/* EMPTY ROWS */}
           {[...Array(6)].map((_, i) => (
@@ -140,14 +109,14 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
       </div>
 
       {/* PAGINATION - Responsive */}
-      <div className="w-full max-w-2xl flex items-center justify-center gap-4 sm:gap-6 text-sm sm:text-base text-white/80 mt-2">
-        <button className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full">
+      <div className="w-full max-w-2xl flex  gap-2 sm:gap-2 text-sm sm:text-base text-white/80 mt-2">
+        <button className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center  ounded-full">
           ◀
         </button>
-        <span className="font-medium">
+        <span className="font-medium my-2">
           Page <span className="font-bold">2</span> of <span className="font-bold">2</span>
         </span>
-        <button className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full">
+        <button className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center   rounded-full">
           ▶
         </button>
       </div>

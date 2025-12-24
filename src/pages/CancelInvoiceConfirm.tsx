@@ -9,7 +9,7 @@ const SendInvoiceConfirm = ({
 }: SendInvoiceConfirmProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      
+
       {/* BACKDROP */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -18,7 +18,7 @@ const SendInvoiceConfirm = ({
 
       {/* MODAL - Same responsive design as CancelInvoiceConfirm */}
       <div className="relative w-[85%] max-w-md sm:max-w-lg bg-[#D9D9D9] rounded-[16px] sm:rounded-[20px] p-5 sm:p-6 shadow-xl flex items-center justify-between gap-4 sm:gap-6">
-        
+
         {/* TEXT - Same responsive font size */}
         <div className="text-[20px] sm:text-[24px] md:text-[28px] font-bold text-gray-700 leading-tight">
           Do You Want to
