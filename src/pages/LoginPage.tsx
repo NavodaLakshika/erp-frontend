@@ -6,8 +6,10 @@ import api from "../api/axios";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("demoUser"); // Demo username
+  const [password, setPassword] = useState("demoPass"); // Demo Password
+  // const [username, setUsername] = useState("");
+  // const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
@@ -30,6 +32,26 @@ function LoginPage() {
     setError(false);
     setSuccessMsg(false);
     setLoading(true);
+
+  // demo
+        const demoMode = true;
+    if (demoMode) {
+      setTimeout(() => {
+        localStorage.setItem("token", "demo-token");
+        localStorage.setItem("username", username);
+        localStorage.setItem("loginSuccess", "true");
+        sessionStorage.setItem("isAuthenticated", "true");
+
+        setSuccessMsg(true);
+        setLoading(false);
+        setShowRedirectLoader(true);
+
+        setTimeout(() => {
+          navigate("/main-menu");
+        }, 1000);
+      }, 1000);
+      return;
+    }
     
     try {
       const res = await api.post("/auth/login", { username, password });
