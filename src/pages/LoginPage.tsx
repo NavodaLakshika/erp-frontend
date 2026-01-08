@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
-import Loader from '../components/Loader';
+import Loader from "../components/Loader";
 import api from "../api/axios";
 
 function LoginPage() {
   const navigate = useNavigate();
-    const [username, setUsername] = useState("demoUser"); // Demo username
-  const [password, setPassword] = useState("demoPass"); // Demo Password
-  // const [username, setUsername] = useState("");
-  // const [password, setPassword] = useState("");
+  // const [username, setUsername] = useState("demoUser"); // Demo username
+  // const [password, setPassword] = useState("demoPass"); // Demo Password
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
@@ -23,7 +23,7 @@ function LoginPage() {
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     if (!username || !password) {
       setError(true);
       return;
@@ -33,36 +33,38 @@ function LoginPage() {
     setSuccessMsg(false);
     setLoading(true);
 
-  // demo
-        const demoMode = true;
-    if (demoMode) {
-      setTimeout(() => {
-        localStorage.setItem("token", "demo-token");
-        localStorage.setItem("username", username);
-        localStorage.setItem("loginSuccess", "true");
-        sessionStorage.setItem("isAuthenticated", "true");
+    // demo
+    //     const demoMode = true;
+    // if (demoMode) {
+    //   setTimeout(() => {
+    //     localStorage.setItem("token", "demo-token");
+    //     localStorage.setItem("username", username);
+    //     localStorage.setItem("loginSuccess", "true");
+    //     sessionStorage.setItem("isAuthenticated", "true");
 
-        setSuccessMsg(true);
-        setLoading(false);
-        setShowRedirectLoader(true);
+    //     setSuccessMsg(true);
+    //     setLoading(false);
+    //     setShowRedirectLoader(true);
 
-        setTimeout(() => {
-          navigate("/main-menu");
-        }, 1000);
-      }, 1000);
-      return;
-    }
-    
+    //     setTimeout(() => {
+    //       navigate("/main-menu");
+    //     }, 1000);
+    //   }, 1000);
+    //   return;
+    // }
+    localStorage.removeItem("token");
+
     try {
-      const res = await api.post("/auth/login", { username, password });
+      const res = await api.post("/api/auth/login", {
+        email: username,
+        password: password,
+      });
 
       // Save auth data
+      sessionStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("token", res.data.access_token);
       localStorage.setItem("username", username);
       localStorage.setItem("loginSuccess", "true");
-      
-      // IMPORTANT: Set session authentication flag
-      sessionStorage.setItem("isAuthenticated", "true");
 
       setSuccessMsg(true);
       setLoading(false);
@@ -76,7 +78,6 @@ function LoginPage() {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center ">
@@ -108,10 +109,18 @@ function LoginPage() {
               <input
                 type="text"
                 value={username}
-                onChange={(e) => { setUsername(e.target.value); setError(false); }}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setError(false);
+                }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${error ? "bg-red-100 border-2 border-red-500" : "bg-white"
-                  } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
+                  error ? "bg-red-100 border-2 border-red-500" : "bg-white"
+                } ${
+                  loading || showRedirectLoader
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
               />
             </div>
 
@@ -122,25 +131,38 @@ function LoginPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(false); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(false);
+                }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${error ? "bg-red-100 border-2 border-red-500" : "bg-white"
-                  } ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
+                  error ? "bg-red-100 border-2 border-red-500" : "bg-white"
+                } ${
+                  loading || showRedirectLoader
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
               />
             </div>
 
             <button
               type="submit" // Enter key works with submit button
               disabled={loading || showRedirectLoader}
-              className={`w-40 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[20px] mb-4 ml-29 flex items-center justify-center ${loading || showRedirectLoader ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-                }`}
+              className={`w-40 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[20px] mb-4 ml-29 flex items-center justify-center ${
+                loading || showRedirectLoader
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-blue-600"
+              }`}
             >
               {loading ? (
                 <>
                   <Loader size="small" color="white" />
                   <span className="ml-2">Loading...</span>
                 </>
-              ) : 'Login'}
+              ) : (
+                "Login"
+              )}
             </button>
 
             <div className="flex items-center justify-center ml-7">
@@ -152,7 +174,10 @@ function LoginPage() {
                 disabled={loading || showRedirectLoader}
                 className="mr-2"
               />
-              <label htmlFor="remember" className="text-white text-[18px] font-medium">
+              <label
+                htmlFor="remember"
+                className="text-white text-[18px] font-medium"
+              >
                 Remember me
               </label>
             </div>
@@ -162,8 +187,10 @@ function LoginPage() {
             <div className="flex items-start gap-0.5 font-semibold mt-0.5 text-white text-[15px] ml-6">
               <img src="/error.png" alt="info" className="w-2 h-8" />
               <p className="text-white text-[15px] font-semibold text-center">
-                If you forget your <span className="font-semibold">USERNAME</span> or{" "}
-                <span className="font-semibold">PASSWORD</span> please contact your <br />
+                If you forget your{" "}
+                <span className="font-semibold">USERNAME</span> or{" "}
+                <span className="font-semibold">PASSWORD</span> please contact
+                your <br />
                 <span className="text-center">admin..</span>
               </p>
             </div>

@@ -1,28 +1,21 @@
+// src/components/ProtectedRoute.tsx
+import React from "react";
 import { Navigate } from "react-router-dom";
-import type { ReactNode } from "react";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const token = localStorage.getItem("token");
-  const username = localStorage.getItem("username");
-  const isAuthenticated = sessionStorage.getItem("isAuthenticated");
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  // Check if user is authenticated
+  const isAuthenticated = sessionStorage.getItem("isAuthenticated") === "true";
 
-  // Must have all three: token, username, AND authenticated in current session
-  if (!token || !username || isAuthenticated !== "true") {
-    // Clear any existing data
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("loginSuccess");
-    sessionStorage.removeItem("isAuthenticated");
-    
+  if (!isAuthenticated) {
+    // Redirect to login page if not authenticated
     return <Navigate to="/" replace />;
   }
 
-  // If authenticated, render the protected component
   return <>{children}</>;
-}
+};
 
 export default ProtectedRoute;
