@@ -1,47 +1,49 @@
+// CreateCustomer.tsx
 import { useState } from "react";
-import { createCustomer } from "../api/customers";
+import { createCustomer, type Customer } from "../api/customers";
 
-// Props for create customer modal
 interface CreateCustomerProps {
   onClose: () => void;
-  onCreated?: (customer: any) => void;
+  onCustomerCreated?: (customer: Customer) => void;
 }
 
-
-const CreateCustomer = ({ onClose, onCreated }: CreateCustomerProps) => {
-  const [form, setForm] = useState({
+const CreateCustomer = ({ onClose, onCustomerCreated }: CreateCustomerProps) => {
+  const [formData, setFormData] = useState({
     first_name: "",
-    last_name: "",
     middle_name: "",
+    last_name: "",
     address: "",
     telephone: "",
-    description: "",
+    description: ""
   });
-
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!form.first_name || !form.last_name) {
-      alert("First name and Last name are required");
-      return;
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       setLoading(true);
-      const res = await createCustomer(form);
-      onCreated?.(res.data);
+      const response = await createCustomer(formData);
+      const newCustomer: Customer = response.data.data || response.data;
+      
+      alert("Customer created successfully!");
+      
+      if (onCustomerCreated) {
+        onCustomerCreated(newCustomer);
+      }
+      
       onClose();
-    } catch (err: any) {
-      alert(err.response?.data?.message || err.message || "Failed to create customer");
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      alert("Failed to create customer");
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -52,110 +54,130 @@ const CreateCustomer = ({ onClose, onCreated }: CreateCustomerProps) => {
       />
 
       {/* MODAL */}
-      <div className="relative w-full max-w-2xl bg-[#D3D3D3] rounded-xl p-4 sm:p-5 shadow-2xl">
+      <div className="relative w-full max-w-md lg:max-w-lg bg-[#D9D9D9] rounded-xl p-4 sm:p-6 shadow-2xl">
+        
+        {/* HEADER */}
+        <div className="text-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-black">Create New Customer</h2>
+          <p className="text-sm text-gray-600">Fill in customer details</p>
+        </div>
 
-        {/* FORM GRID */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-
+        {/* FORM */}
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {/* First Name */}
           <div>
-            <label className="block  px-3 py-1   text-xs font-medium">
-              First Name
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              First Name *
             </label>
             <input
               type="text"
               name="first_name"
-              value={form.first_name}
+              value={formData.first_name}
               onChange={handleChange}
-              className="w-full h-8 bg-[#EDEDED] rounded-[13px] px-3 outline-none"
+              required
+              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="Enter first name"
+            />
+          </div>
+
+          {/* Middle Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Middle Name
+            </label>
+            <input
+              type="text"
+              name="middle_name"
+              value={formData.middle_name}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="Enter middle name (optional)"
             />
           </div>
 
           {/* Last Name */}
           <div>
-            <label className="block  px-3 py-1 rounded-full  text-xs font-medium">
-              Last Name
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Last Name *
             </label>
             <input
               type="text"
               name="last_name"
-              value={form.last_name}
+              value={formData.last_name}
               onChange={handleChange}
-              className="w-full h-8 bg-[#EDEDED] rounded-[13px] px-3 outline-none"
+              required
+              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="Enter last name"
+            />
+          </div>
+
+          {/* Telephone */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Telephone *
+            </label>
+            <input
+              type="tel"
+              name="telephone"
+              value={formData.telephone}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="Enter phone number"
             />
           </div>
 
           {/* Address */}
-          <div >
-            <label className="block px-3 py-1 rounded-lg  text-xs font-medium ">
-              Address
-            </label>
-            <div>
-              <textarea
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                className="w-full h-25  bg-[#EDEDED] rounded-xl px-3 py-2 outline-none resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Email */}
           <div>
-            <label className="block px-3 py-1 rounded-full  text-xs font-medium">
-              Email
-            </label>
-            <input
-              type="middle_name"
-              name="middle_name"
-              value={form.middle_name}
-              onChange={handleChange}
-              className="w-full h-8  bg-[#EDEDED] rounded-[13px] px-3 outline-none"
-            />
-
-            {/* Phone */}
-            <label className="block  px-3 py-1 rounded-full mt-2 text-xs font-medium">
-              Phone
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Address
             </label>
             <input
               type="text"
-              name="telephone"
-              value={form.telephone}
+              name="address"
+              value={formData.address}
               onChange={handleChange}
-              className="w-full h-8  bg-[#EDEDED] rounded-[13px] px-3 outline-none"
+              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="Enter address"
             />
           </div>
 
           {/* Description */}
-          <div className="col-span-2">
-            <label className="block px-3 py-1 rounded-lg  text-xs font-medium">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
             </label>
             <textarea
               name="description"
-              value={form.description}
+              value={formData.description}
               onChange={handleChange}
-              className="w-full h-25  bg-[#EDEDED] rounded-xl px-3 py-2 outline-none resize-none"
+              rows={2}
+              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="Enter description (optional)"
             />
           </div>
-        </div>
 
-        {/* FOOTER */}
-        <div className="flex items-left justify-between mt-2">
-
-          {/* ADD BUTTON */}
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-6 h-8 bg-[#0B5D3A] text-white  rounded-full text-xs font-semibold hover:opacity-90 ml-139"
-          >
-            {loading ? "Saving..." : "ADD"}
-          </button>
-        </div>
+          {/* BUTTONS */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 h-10 bg-gray-300 text-black rounded-full font-medium hover:bg-gray-400 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 h-10 bg-[#05522B] text-white rounded-full font-medium hover:bg-[#0E8A2A] transition-all disabled:opacity-50"
+            >
+              {loading ? "Creating..." : "Create Customer"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
-
 };
 
 export default CreateCustomer;

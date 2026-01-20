@@ -6,8 +6,6 @@ import api from "../api/axios";
 
 function LoginPage() {
   const navigate = useNavigate();
-  // const [username, setUsername] = useState("demoUser"); // Demo username
-  // const [password, setPassword] = useState("demoPass"); // Demo Password
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -19,6 +17,8 @@ function LoginPage() {
   // Clear session on login page load
   useEffect(() => {
     sessionStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user_id"); // Clear previous user ID
   }, []);
 
   const handleLogin = async (e?: React.FormEvent) => {
@@ -33,26 +33,8 @@ function LoginPage() {
     setSuccessMsg(false);
     setLoading(true);
 
-    // demo
-    //     const demoMode = true;
-    // if (demoMode) {
-    //   setTimeout(() => {
-    //     localStorage.setItem("token", "demo-token");
-    //     localStorage.setItem("username", username);
-    //     localStorage.setItem("loginSuccess", "true");
-    //     sessionStorage.setItem("isAuthenticated", "true");
-
-    //     setSuccessMsg(true);
-    //     setLoading(false);
-    //     setShowRedirectLoader(true);
-
-    //     setTimeout(() => {
-    //       navigate("/main-menu");
-    //     }, 1000);
-    //   }, 1000);
-    //   return;
-    // }
     localStorage.removeItem("token");
+    localStorage.removeItem("user_id"); // Clear any old user ID
 
     try {
       const res = await api.post("/auth/login", {
@@ -60,10 +42,48 @@ function LoginPage() {
         password: password,
       });
 
+      console.log("Login API Response:", res.data); // Debug log
+
       // Save auth data
       sessionStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("token", res.data.access_token);
       localStorage.setItem("username", username);
+      
+      // CRITICAL FIX: Save user ID from response
+      // Check different possible response structures
+      let userId = null;
+      
+      if (res.data.user_id) {
+        userId = res.data.user_id;
+      } else if (res.data.user?.id) {
+        userId = res.data.user.id;
+      } else if (res.data.id) {
+        userId = res.data.id;
+      }
+      
+      if (userId) {
+        localStorage.setItem("user_id", userId.toString());
+        console.log("Saved user_id to localStorage:", userId);
+      } else {
+        console.warn("No user ID found in login response!");
+        // Try to get user from a separate endpoint if available
+        try {
+          // If your API has a /auth/me endpoint
+          const userRes = await api.get("/auth/me", {
+            headers: {
+              Authorization: `Bearer ${res.data.access_token}`
+            }
+          });
+          if (userRes.data?.id) {
+            localStorage.setItem("user_id", userRes.data.id.toString());
+            console.log("Got user_id from /auth/me:", userRes.data.id);
+          }
+        } catch (userError) {
+          console.error("Could not fetch user info:", userError);
+          // If you can't get user ID, we'll need to handle this differently
+        }
+      }
+      
       localStorage.setItem("loginSuccess", "true");
 
       setSuccessMsg(true);
@@ -73,9 +93,21 @@ function LoginPage() {
       setTimeout(() => {
         navigate("/main-menu");
       }, 1000);
-    } catch {
+    } catch (error: any) {
+      console.error("Login error:", error.response?.data || error.message);
       setError(true);
       setLoading(false);
+      
+      // Clear any partial auth data on error
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+    }
+  };
+
+  // Handle Enter key for password field
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
     }
   };
 
@@ -121,6 +153,7 @@ function LoginPage() {
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
+                placeholder="Enter email"
               />
             </div>
 
@@ -135,6 +168,7 @@ function LoginPage() {
                   setPassword(e.target.value);
                   setError(false);
                 }}
+                onKeyPress={handleKeyPress}
                 disabled={loading || showRedirectLoader}
                 className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
                   error ? "bg-red-100 border-2 border-red-500" : "bg-white"
@@ -143,11 +177,12 @@ function LoginPage() {
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
+                placeholder="Enter password"
               />
             </div>
 
             <button
-              type="submit" // Enter key works with submit button
+              type="submit"
               disabled={loading || showRedirectLoader}
               className={`w-40 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[20px] mb-4 ml-29 flex items-center justify-center ${
                 loading || showRedirectLoader

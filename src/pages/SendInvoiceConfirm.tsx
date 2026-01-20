@@ -1,6 +1,7 @@
+// SendInvoiceConfirm.tsx
 interface SendInvoiceConfirmProps {
-  onConfirm: () => void; // Function called when user confirms sending the invoice
-  onClose: () => void;  // Function called when user cancels or closes the modal
+  onConfirm: () => void;
+  onClose: () => void;
 }
 
 const SendInvoiceConfirm = ({
@@ -8,7 +9,7 @@ const SendInvoiceConfirm = ({
   onClose,
 }: SendInvoiceConfirmProps) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
       {/* BACKDROP */}
       <div
@@ -16,36 +17,33 @@ const SendInvoiceConfirm = ({
         onClick={onClose}
       />
 
-      {/* MODAL */}
-      <div className="relative w-[90%] max-w-sm bg-[#D9D9D9] rounded-[16px] p-4 shadow-2xl">
+      {/* MODAL - Same responsive design as CancelInvoiceConfirm */}
+      <div className="relative w-[85%] max-w-md sm:max-w-lg bg-[#D9D9D9] rounded-[16px] sm:rounded-[20px] p-5 sm:p-6 shadow-xl flex items-center justify-between gap-4 sm:gap-6">
 
-        {/* MESSAGE */}
-        <div className="text-center text-[22px] font-bold text-gray-700 mb-6 leading-tight">
-          Do You Want to<br />
+        {/* TEXT - Same responsive font size */}
+        <div className="text-[20px] sm:text-[24px] md:text-[28px] font-bold text-gray-700 leading-tight">
+          Do You Want to
+          <br />
           <span className="text-black">Send Invoice?</span>
         </div>
 
-        {/* BUTTONS */}
-        <div className="flex gap-4 justify-center">
-
-          {/* YES */}
+        {/* BUTTONS - Same responsive sizing */}
+        <div className="flex flex-col gap-3 sm:gap-4">
+          {/* YES - Changed to green gradient */}
           <button
             onClick={onConfirm}
-            className="w-24 h-12 bg-gradient-to-b from-[#7CFE96] to-[#1E7A3A]
-            text-white font-bold rounded-[10px]"
+            className="w-24 h-12 sm:w-28 sm:h-14 bg-gradient-to-b from-[#7CFE96] to-[#1E7A3A] text-white font-bold rounded-[6px] sm:rounded-[8px] shadow hover:from-[#8CFEA6] hover:to-[#2E8A4A] active:from-[#6CEE86] active:to-[#0E6A2A] transition-all"
           >
             YES
           </button>
 
-          {/* NO */}
+          {/* NO - Changed to red gradient */}
           <button
             onClick={onClose}
-            className="w-24 h-12 bg-gradient-to-b from-[#C62828] to-[#7A1212]
-            text-white font-bold rounded-[10px]"
+            className="w-24 h-12 sm:w-28 sm:h-14 bg-gradient-to-b from-[#C62828] to-[#7A1212] text-white font-bold rounded-[6px] sm:rounded-[8px] shadow hover:from-[#D63838] hover:to-[#8A2222] active:from-[#B61818] active:to-[#6A0202] transition-all"
           >
             NO
           </button>
-
         </div>
       </div>
     </div>
