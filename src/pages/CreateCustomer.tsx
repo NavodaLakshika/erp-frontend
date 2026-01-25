@@ -46,137 +46,137 @@ const CreateCustomer = ({ onClose, onCustomerCreated }: CreateCustomerProps) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* BACKDROP */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+   <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+  {/* BACKDROP */}
+  <div
+    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+    onClick={onClose}
+  />
 
-      {/* MODAL */}
-      <div className="relative w-full max-w-md lg:max-w-lg bg-[#D9D9D9] rounded-xl p-4 sm:p-6 shadow-2xl">
-        
-        {/* HEADER */}
-        <div className="text-center mb-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-black">Create New Customer</h2>
-          <p className="text-sm text-gray-600">Fill in customer details</p>
-        </div>
-
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-          {/* First Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name *
-            </label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="Enter first name"
-            />
-          </div>
-
-          {/* Middle Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Middle Name
-            </label>
-            <input
-              type="text"
-              name="middle_name"
-              value={formData.middle_name}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="Enter middle name (optional)"
-            />
-          </div>
-
-          {/* Last Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="Enter last name"
-            />
-          </div>
-
-          {/* Telephone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Telephone *
-            </label>
-            <input
-              type="tel"
-              name="telephone"
-              value={formData.telephone}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="Enter phone number"
-            />
-          </div>
-
-          {/* Address */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="Enter address"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={2}
-              className="w-full px-4 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              placeholder="Enter description (optional)"
-            />
-          </div>
-
-          {/* BUTTONS */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 h-10 bg-gray-300 text-black rounded-full font-medium hover:bg-gray-400 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 h-10 bg-[#05522B] text-white rounded-full font-medium hover:bg-[#0E8A2A] transition-all disabled:opacity-50"
-            >
-              {loading ? "Creating..." : "Create Customer"}
-            </button>
-          </div>
-        </form>
-      </div>
+  {/* MODAL */}
+  <div className="relative w-full max-w-2xl lg:max-w-3xl bg-[#D9D9D9] rounded-3xl p-6 sm:p-9 shadow-2xl">
+    
+    {/* HEADER */}
+    <div className="text-center mb-6">
+      <h2 className="text-2xl sm:text-4xl font-bold text-black text-[30px]">Create New Customer</h2>
+      <p className="text-base text-gray-600 text-[21px]">Fill in customer details</p>
     </div>
+
+    {/* FORM */}
+    <form onSubmit={handleSubmit} className="space-y-4.5 sm:space-y-6">
+      {/* First Name */}
+      <div>
+        <label className="block text-base font-medium text-gray-700 mb-1.5 text-[21px]">
+          First Name *
+        </label>
+        <input
+          type="text"
+          name="first_name"
+          value={formData.first_name}
+          onChange={handleChange}
+          required
+          className="w-full px-6 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-3 focus:ring-blue-500 focus:border-blue-500 outline-none text-[24px]"
+          placeholder="Enter first name"
+        />
+      </div>
+
+      {/* Middle Name */}
+      <div>
+        <label className="block text-base font-medium text-gray-700 mb-1.5 text-[21px]">
+          Middle Name
+        </label>
+        <input
+          type="text"
+          name="middle_name"
+          value={formData.middle_name}
+          onChange={handleChange}
+          className="w-full px-6 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-3 focus:ring-blue-500 focus:border-blue-500 outline-none text-[24px]"
+          placeholder="Enter middle name (optional)"
+        />
+      </div>
+
+      {/* Last Name */}
+      <div>
+        <label className="block text-base font-medium text-gray-700 mb-1.5 text-[21px]">
+          Last Name *
+        </label>
+        <input
+          type="text"
+          name="last_name"
+          value={formData.last_name}
+          onChange={handleChange}
+          required
+          className="w-full px-6 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-3 focus:ring-blue-500 focus:border-blue-500 outline-none text-[24px]"
+          placeholder="Enter last name"
+        />
+      </div>
+
+      {/* Telephone */}
+      <div>
+        <label className="block text-base font-medium text-gray-700 mb-1.5 text-[21px]">
+          Telephone *
+        </label>
+        <input
+          type="tel"
+          name="telephone"
+          value={formData.telephone}
+          onChange={handleChange}
+          required
+          className="w-full px-6 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-3 focus:ring-blue-500 focus:border-blue-500 outline-none text-[24px]"
+          placeholder="Enter phone number"
+        />
+      </div>
+
+      {/* Address */}
+      <div>
+        <label className="block text-base font-medium text-gray-700 mb-1.5 text-[21px]">
+          Address
+        </label>
+        <input
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          className="w-full px-6 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-3 focus:ring-blue-500 focus:border-blue-500 outline-none text-[24px]"
+          placeholder="Enter address"
+        />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-base font-medium text-gray-700 mb-1.5 text-[21px]">
+          Description
+        </label>
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          rows={3}
+          className="w-full px-6 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-3 focus:ring-blue-500 focus:border-blue-500 outline-none text-[24px]"
+          placeholder="Enter description (optional)"
+        />
+      </div>
+
+      {/* BUTTONS */}
+      <div className="flex justify-end gap-4.5 pt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-7.5 h-15 bg-gray-300 text-black rounded-full font-medium hover:bg-gray-400 transition-all text-[21px]"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-7.5 h-15 bg-[#05522B] text-white rounded-full font-medium hover:bg-[#0E8A2A] transition-all disabled:opacity-50 text-[21px]"
+        >
+          {loading ? "Creating..." : "Create Customer"}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
   );
 };
 

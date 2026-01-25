@@ -117,25 +117,25 @@ function LoginPage() {
 
       <div className="w-full max-w-md">
         {error && (
-          <div className="w-80 bg-red-500 text-white px-4 py-2.5 rounded-full text-[18px] font-medium text-center  mt-4 ml-24">
+          <div className="w-110 bg-red-500 text-white  py-7 rounded-full text-[25px] font-medium text-center  mt-4 ml-5">
             Incorrect Username or Password
           </div>
         )}
         {successMsg && (
-          <div className="w-80 bg-green-700 text-white px-4 py-2.5 rounded-full text-[18px] font-medium text-center ml-24">
+          <div className="w-80 bg-green-700 text-white px-4 py-6 rounded-full text-[22px] font-medium text-center ml-24">
             Login Successful!
           </div>
         )}
 
-        <div className="bg-black rounded-lg  sm:p-12">
-          <div className="mb-[-100px]">
+        <div className="bg-black rounded-lg  ">
+          <div className="mb-[-10px]">
             <Logo />
           </div>
 
           {/* Single form wrapping all inputs */}
           <form onSubmit={handleLogin}>
             <div className="mb-4 ">
-              <label className="block text-white mb-1 ml-2 text-[20px] font-medium">
+              <label className="block text-white ml-[-30px] mt-[-100px] mb-1 ml-2 text-[40px] font-medium">
                 User Name *
               </label>
               <input
@@ -146,19 +146,19 @@ function LoginPage() {
                   setError(false);
                 }}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
+                className={`w-[550px] ml-[-45px]  px-6 py-9 rounded-full text-black focus:outline-none text-[25px] ${
                   error ? "bg-red-100 border-2 border-red-500" : "bg-white"
                 } ${
                   loading || showRedirectLoader
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
-                placeholder="Enter email"
+                
               />
             </div>
 
             <div className="mb-15">
-              <label className="block text-white text-[20px] mb-1 ml-2 text-xs font-medium">
+              <label className="block text-white ml-[-30px] text-[40px] mb-1 ml-2  ">
                 Password *
               </label>
               <input
@@ -170,21 +170,21 @@ function LoginPage() {
                 }}
                 onKeyPress={handleKeyPress}
                 disabled={loading || showRedirectLoader}
-                className={`w-[400px] px-6 py-3 rounded-full text-black focus:outline-none ${
+                className={`w-[550px] ml-[-45px] px-6 py-9 rounded-full text-black focus:outline-none text-[25px] ${
                   error ? "bg-red-100 border-2 border-red-500" : "bg-white"
                 } ${
                   loading || showRedirectLoader
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
-                placeholder="Enter password"
+                
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || showRedirectLoader}
-              className={`w-40 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[20px] mb-4 ml-29 flex items-center justify-center ${
+              className={`w-50 bg-blue-500 text-white font-medium py-3 rounded-full transition-colors text-[30px] mb-4 ml-31 flex items-center justify-center ${
                 loading || showRedirectLoader
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-blue-600"
@@ -200,18 +200,18 @@ function LoginPage() {
               )}
             </button>
 
-            <div className="flex items-center justify-center ml-7">
+            <div className="flex items-center justify-center ">
               <input
                 type="checkbox"
                 id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 disabled={loading || showRedirectLoader}
-                className="mr-2"
+                className="mr-2 w-6 h-6"
               />
               <label
                 htmlFor="remember"
-                className="text-white text-[18px] font-medium"
+                className="text-white text-[30px] font-medium"
               >
                 Remember me
               </label>
@@ -219,9 +219,9 @@ function LoginPage() {
           </form>
 
           {error && (
-            <div className="flex items-start gap-0.5 font-semibold mt-0.5 text-white text-[15px] ml-6">
-              <img src="/error.png" alt="info" className="w-2 h-8" />
-              <p className="text-white text-[15px] font-semibold text-center">
+            <div className="flex items-start gap-0.5 font-semibold mt-0.5 text-white ml-">
+              <img src="/error.png" alt="info" className="w-8 h-15" />
+              <p className="text-white text-[28px] font-semibold text-center">
                 If you forget your{" "}
                 <span className="font-semibold">USERNAME</span> or{" "}
                 <span className="font-semibold">PASSWORD</span> please contact

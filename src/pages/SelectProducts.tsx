@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getItems } from "../api/items";
+import { getStocksByOutlet } from "../api/stocks";
 
 interface SelectProductsProps {
   onClose: () => void;
@@ -25,6 +26,7 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
   const [quantity, setQuantity] = useState<string>("1");
   const [wholesalePrice, setWholesalePrice] = useState<string>("");
   const [sellingPrice, setSellingPrice] = useState<string>("");
+  const outletId = Number(localStorage.getItem("outlet_id")) || 1;
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -50,11 +52,47 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
     fetchItems();
   }, [search]);
 
-  const handleItemSelect = (item: Item) => {
+  const handleItemSelect = async (item: Item) => {
     setSelectedItem(item);
-    // Set default selling price (you can adjust this logic)
-    const price = Math.random() * 100 + 10; // Random price for demo
-    setSellingPrice(price.toFixed(2));
+
+    try {
+      const outletId = Number(localStorage.getItem("outlet_id")) || 1;
+
+      // Use the correct API endpoint for stocks by outlet
+      const res = await getStocksByOutlet(outletId);
+      
+      // Check the actual response structure
+      console.log("Stocks API Response:", res.data);
+      
+      // The response might be nested in a data property
+      const stocksData = Array.isArray(res.data) ? res.data : 
+                       (res.data.data && Array.isArray(res.data.data)) ? res.data.data : 
+                       [];
+      
+      // Find stock for selected item
+      const stock = stocksData.find(
+        (s: any) => s.item_id === item.id
+      );
+
+      if (!stock) {
+        alert("No stock available for this item");
+        setWholesalePrice("");
+        setSellingPrice("");
+        return;
+      }
+
+      // ✅ REAL PRICES FROM BACKEND - use buy_price for wholesale and stock_price/retail_price for selling
+      const wholesale = stock.buy_price || 0;
+      const selling = stock.stock_price || stock.retail_price || 0;
+      
+      setWholesalePrice(wholesale.toString());
+      setSellingPrice(selling.toString());
+
+    } catch (err) {
+      console.error("Failed to load stock price", err);
+      setWholesalePrice("");
+      setSellingPrice("");
+    }
   };
 
   const handleAddToInvoice = () => {
@@ -89,7 +127,7 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       {/* BACKDROP */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -97,40 +135,40 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
       />
 
       {/* MODAL */}
-      <div className="relative w-full max-w-2xl lg:max-w-4xl bg-[#D9D9D9] rounded-xl sm:rounded-xl p-4 sm:p-6 shadow-2xl">
+      <div className="relative w-full max-w-3xl lg:max-w-6xl bg-[#D9D9D9] rounded-3xl sm:rounded-3xl p-6 sm:p-9 shadow-2xl">
         {/* SEARCH */}
-        <div className="flex items-center bg-white rounded-[12px] px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6">
+        <div className="flex items-center bg-white rounded-[18px] px-6 sm:px-9 py-3 sm:py-4.5 mb-6 sm:mb-9">
           <img
             src="./search-products.png"
             alt="Search"
-            className="mr-2 sm:mr-3 w-5 h-5 sm:w-6 sm:h-6"
+            className="mr-3 sm:mr-4.5 w-7.5 h-7.5 sm:w-9 sm:h-9"
           />
           <input
             type="text"
             placeholder="Search Products..."
-            className="w-full outline-none text-sm sm:text-base bg-transparent placeholder:text-gray-500"
+            className="w-full outline-none text-base sm:text-lg bg-transparent placeholder:text-gray-500 text-[24px]"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         {/* TABLE */}
-        <div className="bg-[#A0A0A0] rounded-xl sm:rounded-xl overflow-hidden ">
+        <div className="bg-[#A0A0A0] rounded-3xl sm:rounded-3xl overflow-hidden">
           {/* HEADER */}
-          <div className="grid grid-cols-5 bg-[#2F2F2F] text-xs sm:text-sm font-semibold text-white px-3 sm:px-4 py-3 sm:py-4">
-            <div className="text-center sm:text-left">#</div>
-            <div className="text-center sm:text-left">SKU</div>
-            <div className="text-center sm:text-left">Description</div>
-            <div className="text-center sm:text-left">Item Name</div>
-            <div className="text-center sm:text-left">Outlet</div>
+          <div className="grid grid-cols-5 bg-[#2F2F2F] text-sm sm:text-base font-semibold text-white px-4.5 sm:px-6 py-4.5 sm:py-6">
+            <div className="text-center sm:text-left text-[18px]">#</div>
+            <div className="text-center sm:text-left text-[18px]">SKU</div>
+            <div className="text-center sm:text-left text-[18px]">Description</div>
+            <div className="text-center sm:text-left text-[18px]">Item Name</div>
+            <div className="text-center sm:text-left text-[18px]">Outlet</div>
           </div>
 
           {/* ROWS */}
-          <div className="h-36 sm:h-48 overflow-y-auto">
-            {loading && <div className="text-center py-6">Loading...</div>}
+          <div className="h-54 sm:h-72 overflow-y-auto">
+            {loading && <div className="text-center py-9 text-[24px]">Loading...</div>}
 
             {!loading && items.length === 0 && (
-              <div className="text-center py-6">No items found</div>
+              <div className="text-center py-9 text-[24px]">No items found</div>
             )}
 
             {!loading &&
@@ -138,47 +176,47 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
                 <div
                   key={item.id}
                   onClick={() => handleItemSelect(item)}
-                  className={`grid grid-cols-5 text-xs sm:text-sm px-3 sm:px-4 py-3 sm:py-4 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer ${selectedItem?.id === item.id ? 'bg-blue-100' : ''}`}
+                  className={`grid grid-cols-5 text-sm sm:text-base px-4.5 sm:px-6 py-4.5 sm:py-6 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer text-[18px] ${selectedItem?.id === item.id ? 'bg-blue-100' : ''}`}
                 >
-                  <div className="text-center sm:text-left">{i + 1}</div>
-                  <div className="text-center sm:text-left font-medium">{item.sku}</div>
-                  <div className="text-center sm:text-left">{item.description}</div>
-                  <div className="text-center sm:text-left">{item.name}</div>
-                  <div className="text-center sm:text-left">{item.origin}</div>
+                  <div className="text-center sm:text-left text-[18px]">{i + 1}</div>
+                  <div className="text-center sm:text-left font-medium text-[18px]">{item.sku}</div>
+                  <div className="text-center sm:text-left text-[18px]">{item.description}</div>
+                  <div className="text-center sm:text-left text-[18px]">{item.name}</div>
+                  <div className="text-center sm:text-left text-[18px]">{item.origin}</div>
                 </div>
               ))}
           </div>
         </div>
 
         {/* PAGINATION */}
-        <div className="flex items-center mt-2">
-          <button className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black">
+        <div className="flex items-center mt-3">
+          <button className="w-12 h-12 sm:w-15 sm:h-15 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black text-[24px]">
             ◀
           </button>
-          <span className="text-sm sm:text-base font-medium text-black">
+          <span className="text-base sm:text-lg font-medium text-black mx-4.5 text-[24px]">
             Page <span className="font-bold">1</span> of <span className="font-bold">1</span>
           </span>
-          <button className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black">
+          <button className="w-12 h-12 sm:w-15 sm:h-15 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black text-[24px]">
             ▶
           </button>
         </div>
 
         {/* FORM - Responsive */}
-        <div className="flex flex-col items-end mt-4">
+        <div className="flex flex-col items-end mt-6">
           {/* Selected Product */}
-          <div className="w-full sm:w-auto rounded-xl sm:rounded-2xl p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Selected:</span>
-                <span className="text-blue-700 font-bold text-sm sm:text-base">
+          <div className="w-full sm:w-auto rounded-3xl sm:rounded-3xl p-4.5 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-[21px]">Selected:</span>
+                <span className="text-blue-700 font-bold text-base sm:text-lg text-[24px]">
                   {selectedItem ? selectedItem.sku : "None"}
                 </span>
               </div>
-              <div className="flex-1 flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-3">
                 <input
                   type="number"
                   placeholder="Add quantity"
-                  className="w-full sm:w-45 bg-white px-3 sm:px-4 py-2 rounded-[14px] outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full sm:w-[250px] bg-white px-4.5 sm:px-6 py-3 rounded-[21px] outline-none focus:ring-3 focus:ring-blue-500 text-[24px]"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   min="1"
@@ -188,16 +226,16 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
           </div>
 
           {/* Wholesale Price */}
-          <div className="w-full sm:w-auto rounded-xl sm:rounded-2xl p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Wholesale Price:</span>
+          <div className="w-full sm:w-auto rounded-3xl sm:rounded-3xl p-4.5 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-[21px]">Wholesale Price:</span>
               </div>
-              <div className="flex-1 flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-3">
                 <input
                   type="number"
                   placeholder="Enter wholesale price"
-                  className="w-full sm:w-45 bg-white px-3 sm:px-4 py-2 rounded-[14px] outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full sm:w-[250px] bg-white px-4.5 sm:px-6 py-3 rounded-[21px] outline-none focus:ring-3 focus:ring-blue-500 text-[24px]"
                   value={wholesalePrice}
                   onChange={(e) => setWholesalePrice(e.target.value)}
                   step="0.01"
@@ -207,16 +245,16 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
           </div>
 
           {/* Selling Price */}
-          <div className="w-full sm:w-auto rounded-xl sm:rounded-2xl p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Selling Price:</span>
+          <div className="w-full sm:w-auto rounded-3xl sm:rounded-3xl p-4.5 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-[21px]">Selling Price:</span>
               </div>
-              <div className="flex-1 flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-3">
                 <input
                   type="number"
                   placeholder="Enter selling price"
-                  className="w-full sm:w-45 bg-white px-3 sm:px-4 py-2 rounded-[14px] outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full sm:w-[250px] bg-white px-4.5 sm:px-6 py-3 rounded-[21px] outline-none focus:ring-3 focus:ring-blue-500 text-[24px]"
                   value={sellingPrice}
                   onChange={(e) => setSellingPrice(e.target.value)}
                   step="0.01"
@@ -228,12 +266,12 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
         </div>
 
         {/* FOOTER */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4.5 sm:gap-0 mt-6">
           {/* Action Buttons */}
-          <div className="flex gap-3 sm:gap-4">
+          <div className="flex gap-4.5 sm:gap-6">
             <button
               onClick={onClose}
-              className="px-6 sm:px-8 h-9 sm:h-11 bg-gradient-to-b from-[#F59B9B] via-[#ED654A] to-[#3B0202] text-white rounded-full font-medium text-sm sm:text-base hover:from-[#F5ABAB] hover:to-[#ED755A] transition-all flex items-center gap-2"
+              className="px-9 sm:px-12 h-13.5 sm:h-16.5 bg-gradient-to-b from-[#F59B9B] via-[#ED654A] to-[#3B0202] text-white rounded-full font-medium text-base sm:text-lg hover:from-[#F5ABAB] hover:to-[#ED755A] transition-all flex items-center gap-3 text-[21px]"
             >
               CANCEL
             </button>
@@ -241,7 +279,7 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
             <button
               onClick={handleAddToInvoice}
               disabled={!selectedItem}
-              className="px-6 sm:px-8 h-9 sm:h-11 bg-gradient-to-b from-[#0E7A2A] to-[#064C18] text-white rounded-full font-medium text-sm sm:text-base hover:from-[#0E8A2A] hover:to-[#065C18] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-9 sm:px-12 h-13.5 sm:h-16.5 bg-gradient-to-b from-[#0E7A2A] to-[#064C18] text-white rounded-full font-medium text-base sm:text-lg hover:from-[#0E8A2A] hover:to-[#065C18] transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-[21px]"
             >
               <span>ADD</span>
             </button>

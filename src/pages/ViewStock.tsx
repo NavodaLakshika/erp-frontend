@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios"; // make sure this is your axios instance
+import Pagination from "../components/Pagination";
 
 interface ViewStockProps {
   goBack: () => void; // Function to navigate back to the main menu
@@ -34,8 +35,9 @@ const getStocks = async (take = 10, skip = 0) => {
 const ViewStock = ({ goBack }: ViewStockProps) => {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const take = 10;
 
@@ -66,31 +68,31 @@ const ViewStock = ({ goBack }: ViewStockProps) => {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
 
       {/* TOP BAR */}
-      <div className="w-full max-w-6xl lg:max-w-7xl bg-[#D9D9D9] rounded-full flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 sm:py-3 mb-4 sm:mb-6">
+      <div className="w-full max-w-6xl lg:max-w-7xl bg-[#D9D9D9] rounded-full flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 sm:py-8 mb-4 sm:mb-6">
         <button
           onClick={goBack}
-          className="flex items-center gap-2 text-sm sm:text-base font-medium text-black"
+          className="flex items-center gap-2 text-[25px] font-medium text-black"
         >
-          <img src="/Polygon.png" className="w-4 h-4 sm:w-5 sm:h-5" alt="Back" />
+          <img src="/Polygon.png" className="w-4 h-4 sm:w-10 sm:h-10" alt="Back" />
           Main menu
         </button>
 
-        <span className="font-bold text-[16px] sm:text-xl lg:text-2xl text-black">
+        <span className="font-bold text-[36px]  text-black">
           View Stock
         </span>
 
-        <button className="flex items-center gap-2 text-sm sm:text-base font-medium text-black opacity-50">
+        <button className="flex items-center gap-2 text-[25px] font-medium text-black opacity-50">
           Main menu
-          <img src="/Polygon 2.png" className="w-4 h-4 sm:w-5 sm:h-5" alt="Next" />
+          <img src="/Polygon 2.png" className="w-4 h-4 sm:w-10 sm:h-10" alt="Next" />
         </button>
       </div>
 
       {/* TABLE */}
-      <div className="w-full max-w-7xl overflow-x-auto">
-        <div className="min-w-[1600px] bg-[#2F2F2F] rounded-[5px] overflow-hidden">
+      <div className="w-400  overflow-x-auto">
+        <div className="min-w-[2000px] bg-[#2F2F2F] rounded-[5px] overflow-hidden">
 
           {/* HEADER */}
-          <div className="grid grid-cols-17 bg-[#243A9B] text-white text-[10px] font-semibold">
+          <div className="grid grid-cols-17 bg-[#243A9B] text-white text-[20px] font-semibold">
             {[
               "Name", "Sinhala Name", "Type", "Category", "Sub Category", "SKU",
               "Description", "Rack", "Outlet", "Origin",
@@ -104,10 +106,10 @@ const ViewStock = ({ goBack }: ViewStockProps) => {
           </div>
 
           {/* BODY */}
-          <div className="h-[55vh] overflow-y-auto text-[10px] text-white">
+          <div className="h-[55vh] overflow-y-auto text-[20px] text-white">
             {loading ? (
-              <div className="grid grid-cols-17 text-center py-10">
-                <div className="col-span-17">Loading...</div>
+              <div className="grid grid-cols-17 text-center  py-10">
+                <div className="col-span-17 ml-[-350px]">Loading...</div>
               </div>
             ) : (
               stocks.map((stock) => (
@@ -137,27 +139,16 @@ const ViewStock = ({ goBack }: ViewStockProps) => {
         </div>
       </div>
 
+      <div className="text-white">
       {/* PAGINATION */}
-      <div className="w-full max-w-6xl lg:max-w-7xl flex text-xs sm:text-sm text-white/80 mt-3 sm:mt-4 gap-2">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex items-center justify-center rounded-full"
-        >
-          ◀
-        </button>
-        <span className="font-medium mt-3">
-          Page <span className="font-bold">{page}</span> of <span className="font-bold">{totalPages}</span>
-        </span>
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex items-center justify-center rounded-full"
-        >
-          ▶
-        </button>
-      </div>
-
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+</div>
     </div>
   );
 };

@@ -14,14 +14,14 @@ function MenuCard({ title, bgColor, icon, onClick }: MenuCardProps) {
     <div className="flex flex-col items-center cursor-pointer" onClick={onClick}>
       <div
         className={`${bgColor} 
-        w-[206px] h-[186px] 
-        rounded-[60px] 
+        w-[350px] h-[350px] 
+        rounded-[90px] 
         flex items-center justify-center `}
       >
         {icon}
       </div>
 
-      <p className="mt-2 text-white text-[25px] font-semibold text-center">
+      <p className="mt-2 text-white text-[40px] font-semibold text-center">
         {title}
       </p>
     </div>

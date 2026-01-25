@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { getInvoices } from "../api/invoice";
+import Pagination from "../components/Pagination";
 
 interface RecallInvoiceProps {
   onClose: () => void;
-  onSelect?: (invoice: any) => void; // Add this for recall functionality
+  onSelect?: (invoice: Invoice) => void;
 }
 
 interface Invoice {
@@ -19,6 +20,7 @@ interface Invoice {
   discount_type: string;
   discount_amount: number;
   next_box_number: number;
+  invoice_no?: string; // Added this field
   created_user?: {
     username: string;
     first_name: string;
@@ -28,134 +30,146 @@ interface Invoice {
     id: number;
     first_name: string;
     last_name: string;
+    address?: string;
+    telephone?: string;
   };
+  invoice_items?: any[]; // Added this field for items
 }
+
+const ITEMS_PER_PAGE = 10;
 
 const RecallInvoice = ({ onClose, onSelect }: RecallInvoiceProps) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
+  // Fetch invoices
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
         setLoading(true);
-        const res = await getInvoices(); // No parameters
-        console.log("Invoices API Response:", res.data);
-
-        if (res.data?.data && Array.isArray(res.data.data)) {
-          setInvoices(res.data.data);
-          // If your API doesn't return pagination info, calculate based on array length
-          const itemsPerPage = 10;
-          const totalItems = res.data.data.length;
-          setTotalPages(Math.ceil(totalItems / itemsPerPage) || 1);
-        } else if (Array.isArray(res.data)) {
-          setInvoices(res.data);
-          const itemsPerPage = 10;
-          const totalItems = res.data.length;
-          setTotalPages(Math.ceil(totalItems / itemsPerPage) || 1);
-        } else {
-          console.error("API did not return an array:", res.data);
-          setInvoices([]);
-          setTotalPages(1);
+        const res = await getInvoices();
+        
+        console.log("Invoices API Response:", res); // Debug log
+        
+        // Check different possible response structures
+        let invoicesData: Invoice[] = [];
+        
+        if (Array.isArray(res.data)) {
+          invoicesData = res.data;
+        } else if (Array.isArray(res.data?.data)) {
+          invoicesData = res.data.data;
+        } else if (res.data?.data && typeof res.data.data === 'object') {
+          // If data is an object with invoices property
+          invoicesData = res.data.data.invoices || [];
+        } else if (res.data && typeof res.data === 'object') {
+          // Try to extract array from object values
+          const values = Object.values(res.data);
+          if (values.length > 0 && Array.isArray(values[0])) {
+            invoicesData = values[0] as Invoice[];
+          }
         }
+        
+        console.log("Parsed invoices:", invoicesData); // Debug log
+        setInvoices(invoicesData);
+        
       } catch (err) {
         console.error("Error fetching invoices:", err);
         setInvoices([]);
-        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
 
     fetchInvoices();
-  }, []); // Removed currentPage and search from dependencies since API doesn't support them
+  }, []);
 
-  // Filter invoices based on search (client-side)
-  const filteredInvoices = invoices.filter(invoice => 
+  // Filter invoices
+  const filteredInvoices = invoices.filter((invoice) =>
     invoice.id.toString().includes(search) ||
+    (invoice.invoice_no && invoice.invoice_no.toLowerCase().includes(search.toLowerCase())) ||
     invoice.created_at.toLowerCase().includes(search.toLowerCase()) ||
-    (invoice.customer && 
-      (invoice.customer.first_name.toLowerCase().includes(search.toLowerCase()) ||
-       invoice.customer.last_name.toLowerCase().includes(search.toLowerCase()))) ||
-    (invoice.created_user && 
-      (invoice.created_user.first_name.toLowerCase().includes(search.toLowerCase()) ||
-       invoice.created_user.last_name.toLowerCase().includes(search.toLowerCase())))
+    (invoice.customer &&
+      `${invoice.customer.first_name || ''} ${invoice.customer.last_name || ''}`
+        .toLowerCase()
+        .includes(search.toLowerCase())) ||
+    (invoice.created_user &&
+      `${invoice.created_user.first_name || ''} ${invoice.created_user.last_name || ''}`
+        .toLowerCase()
+        .includes(search.toLowerCase()))
   );
 
-  // Paginate filtered results (client-side)
-  const itemsPerPage = 10;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
-  
-  // Recalculate total pages based on filtered results
+  // Reset page when search changes
   useEffect(() => {
-    setTotalPages(Math.ceil(filteredInvoices.length / itemsPerPage) || 1);
-    // Reset to page 1 when search changes
     setCurrentPage(1);
-  }, [filteredInvoices]);
+  }, [search]);
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(prev => prev - 1);
-  };
+  // Pagination calculations
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE)
+  );
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
-  };
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedInvoices = filteredInvoices.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   const handleRecallInvoice = () => {
-    if (selectedInvoice) {
-      if (onSelect) {
-        onSelect(selectedInvoice);
-      }
-      alert(`Invoice INV${selectedInvoice.id} recalled successfully!`);
-      onClose();
-    } else {
+    if (!selectedInvoice) {
       alert("Please select an invoice first");
+      return;
     }
+
+    console.log("Selected invoice for recall:", selectedInvoice); // Debug log
+    
+    // Call the onSelect callback with the selected invoice
+    if (onSelect) {
+      onSelect(selectedInvoice);
+    } else {
+      alert(`Invoice ${selectedInvoice.invoice_no || `INV-${selectedInvoice.id}`} recalled successfully!`);
+    }
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl lg:max-w-4xl bg-[#D9D9D9] rounded-xl  p-4 sm:p-6 shadow-2xl">
-        <div className="flex items-center bg-white rounded-full px-4 sm:px-6 py-2 sm:py-2 mb-4 sm:mb-3">
-          <img
-            src="/search.png"
-            alt="Search"
-            className="w-5 h-5 sm:mt-2 sm:w-5 sm:h-5 mr-2 sm:mr-3 "
-          />
+      <div className="relative w-full max-w-3xl lg:max-w-6xl bg-[#D9D9D9] rounded-3xl p-6 sm:p-9 shadow-2xl">
+        {/* Search */}
+        <div className="flex items-center bg-white rounded-full px-6 py-3 mb-6">
+          <img src="/search.png" alt="Search" className="w-7 h-7 mr-3" />
           <input
             type="text"
             placeholder="Search Invoice..."
-            className="w-full outline-none text-sm sm:text-base bg-transparent placeholder:text-gray-500"
+            className="w-full outline-none bg-transparent text-xl"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <div className="bg-[#BFBABA] rounded-xl  overflow-hidden">
-          <div className="grid grid-cols-5 bg-[#9FA8DA] text-xs sm:text-sm font-semibold text-black px-3 sm:px-4 py-3 sm:py-4">
+        {/* Table */}
+        <div className="bg-[#BFBABA] rounded-3xl overflow-hidden">
+          <div className="grid grid-cols-5 bg-[#9FA8DA] text-sm sm:text-base font-semibold text-black px-4.5 sm:px-6 py-4.5 sm:py-6">
             <div className="text-center sm:text-left">#</div>
             <div className="text-center sm:text-left">Created At</div>
             <div className="text-center sm:text-left">Invoice No</div>
             <div className="text-center sm:text-left">Created By</div>
-            <div className="text-center sm:text-left">Created For</div>
+            <div className="text-center sm:text-left">Customer</div>
           </div>
 
-          <div className="h-48 sm:h-64 overflow-y-auto">
-            {loading && <div className="text-center py-6">Loading...</div>}
+          <div className="h-72 sm:h-96 overflow-y-auto">
+            {loading && <div className="text-center py-9 text-xl">Loading...</div>}
 
             {!loading && paginatedInvoices.length === 0 && (
-              <div className="text-center py-6">
+              <div className="text-center py-9 text-xl">
                 {filteredInvoices.length === 0 ? "No invoices found" : "No results for your search"}
               </div>
             )}
@@ -165,26 +179,31 @@ const RecallInvoice = ({ onClose, onSelect }: RecallInvoiceProps) => {
                 <div
                   key={inv.id}
                   onClick={() => setSelectedInvoice(inv)}
-                  className={`grid grid-cols-5 text-xs sm:text-sm px-3 sm:px-4 py-3 sm:py-4 border-b border-black/20 hover:bg-white/30 transition-colors cursor-pointer ${selectedInvoice?.id === inv.id ? "bg-green-300" : ""}`}
+                  className={`grid grid-cols-5 text-sm sm:text-base px-4.5 sm:px-6 py-4.5 sm:py-6 border-b border-black/20 hover:bg-white/30 transition-colors cursor-pointer text-xl ${selectedInvoice?.id === inv.id ? "bg-green-300" : ""}`}
                 >
                   <div className="font-medium text-center sm:text-left">
                     {startIndex + i + 1}
                   </div>
                   <div className="text-center sm:text-left">
-                    {new Date(inv.created_at).toLocaleDateString()}
+                    {new Date(inv.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
                   </div>
                   <div className="font-semibold text-blue-700 text-center sm:text-left">
-                    INV{inv.id}
+                    {inv.invoice_no || `INV-${inv.id}`}
                   </div>
                   <div className="text-center sm:text-left">
-                    {inv.created_user_id}
+                    {inv.created_user 
+                      ? `${inv.created_user.first_name} ${inv.created_user.last_name}`
+                      : `User ${inv.created_user_id}`
+                    }
                   </div>
                   <div className="text-center sm:text-left">
                     {inv.customer 
                       ? `${inv.customer.first_name} ${inv.customer.last_name}`
-                      : inv.created_user 
-                      ? `${inv.created_user.first_name} ${inv.created_user.last_name}`
-                      : "-"
+                      : `Customer ${inv.customer_id}`
                     }
                   </div>
                 </div>
@@ -192,38 +211,30 @@ const RecallInvoice = ({ onClose, onSelect }: RecallInvoiceProps) => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-2 gap-3 sm:gap-0">
-          <div className="flex items-center ">
-            <button 
-              onClick={handlePreviousPage}
-              disabled={currentPage === 1}
-              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ◀
-            </button>
-            <span className="text-sm sm:text-base font-medium text-black mx-3">
-              Page <span className="font-bold">{currentPage}</span> of <span className="font-bold">{totalPages}</span>
-            </span>
-            <button 
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages || paginatedInvoices.length === 0}
-              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ▶
-            </button>
+        {/* Footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+          {/* Pagination */}
+          <div className="flex justify-center sm:justify-start text-black">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
 
-          <div className="flex gap-3 sm:gap-4">
+          {/* Buttons */}
+          <div className="flex gap-6">
             <button
               onClick={onClose}
-              className="px-5 sm:px-6 h-9 sm:h-11 bg-gray-300 text-black rounded-full font-medium text-sm sm:text-base hover:bg-gray-400 transition-all"
+              className="px-9 h-16 bg-gray-300 rounded-full text-xl hover:bg-gray-400 transition-colors"
             >
               Cancel
             </button>
+
             <button
               onClick={handleRecallInvoice}
               disabled={!selectedInvoice}
-              className="px-5 sm:px-6 h-9 sm:h-11 bg-[#05522B] text-white rounded-full font-medium text-sm sm:text-base hover:from-[#0E8A2A] hover:to-[#065C18] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-9 h-16 bg-gradient-to-b from-[#0E7A2A] to-[#064C18] text-white rounded-full text-xl disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#0E8A2A] hover:to-[#065C18] transition-all"
             >
               Recall Invoice
             </button>

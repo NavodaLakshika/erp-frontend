@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://psderpbackend-production.up.railway.app",
+        target: "https://jayanthatradersprdbackend-dev.up.railway.app",
         changeOrigin: true,
         secure: false,
       },

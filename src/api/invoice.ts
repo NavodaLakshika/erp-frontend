@@ -30,3 +30,8 @@ export const sendInvoice = (invoiceId: number) =>
   api.patch(`/pos/invoice/${invoiceId}`, {
     status: "SENT"
   });
+
+export const getInvoiceById = (id: number) => {
+  return api.get(`/pos/invoice/${id}`);
+};
+
