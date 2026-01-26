@@ -1,12 +1,8 @@
 import axios from "axios";
 
-// Use environment variable, fallback to current path for development
-const baseURL = import.meta.env.VITE_API_URL 
-  ? import.meta.env.VITE_API_URL 
-  : "/api";
-
+// Use the environment variable directly
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
