@@ -1,17 +1,20 @@
-// Temporary axios config for testing
 import axios from "axios";
 
-// Hardcode for production testing
-const baseURL = window.location.hostname.includes('vercel.app')
-  ? "https://jayanthatradersprdbackend-dev.up.railway.app"
-  : "/api";
-
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: "/api", // Vite proxy will forward to your Railway backend
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: false,
+  withCredentials: false, // no cookies needed
+});
+
+// Attach Authorization token automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default api;

@@ -37,7 +37,7 @@ function LoginPage() {
     localStorage.removeItem("user_id"); // Clear any old user ID
 
     try {
-      const res = await api.post("/auth/login", {
+      const res = await api.post("https://jayanthatradersprdbackend-dev.up.railway.app/api/auth/login", {
         email: username,
         password: password,
       });
