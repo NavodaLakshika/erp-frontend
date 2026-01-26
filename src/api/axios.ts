@@ -1,14 +1,13 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api", // Vite proxy will forward to your Railway backend
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: false, // no cookies needed
+  withCredentials: false,
 });
 
-// Attach Authorization token automatically
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
