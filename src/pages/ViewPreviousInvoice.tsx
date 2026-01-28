@@ -9,6 +9,7 @@ interface ViewPreviousInvoiceProps {
 
 interface Invoice {
   id: number;
+  invoice_no: string;
   created_at: string;
   created_user_id: number;
   status: string;
@@ -20,13 +21,14 @@ interface Invoice {
   };
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 
 const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
   const [showRecallConfirm, setShowRecallConfirm] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   // 🔹 Load invoices
   useEffect(() => {
@@ -34,7 +36,7 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
       try {
         setLoading(true);
         const res = await getInvoices();
-        setInvoices(res.data.data);
+        setInvoices(res.data.data || []);
       } catch (err) {
         console.error("Failed to load invoices", err);
       } finally {
@@ -45,10 +47,26 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
     loadInvoices();
   }, []);
 
-  // 🔹 Reset page when data changes
+  // 🔹 Local Filter
+  const filteredInvoices = invoices.filter((inv) => {
+    const s = search.toLowerCase();
+    const invoiceNo = (inv.invoice_no || "").toLowerCase();
+    const status = (inv.status || "").toLowerCase();
+    const creator = inv.created_user
+      ? (`${inv.created_user.first_name || ""} ${inv.created_user.last_name || ""}`).toLowerCase()
+      : "";
+
+    return (
+      invoiceNo.includes(s) ||
+      status.includes(s) ||
+      creator.includes(s)
+    );
+  });
+
+  // 🔹 Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [invoices]);
+  }, [search]);
 
   const handleRecall = () => {
     console.log("Invoice recalled");
@@ -56,121 +74,135 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
   };
 
   // 🔹 Pagination logic
-  const totalPages = Math.ceil(invoices.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
 
-  const paginatedInvoices = invoices.slice(
+  const paginatedInvoices = filteredInvoices.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+    <div className="w-[1200px] h-[1920px] bg-black flex flex-col items-center p-10 mx-auto overflow-hidden">
 
       {/* TOP BAR */}
-      <div className="w-420 bg-[#D9D9D9] rounded-full flex items-center justify-between px-4 sm:px-6 py-10 mb-6">
+      <div className="w-full shrink-0 bg-[#D9D9D9] rounded-full flex items-center justify-between px-6 py-8 mb-10">
         <button
           onClick={goBack}
-          className="flex items-center gap-2  text-[32px] font-medium text-black"
+          className="flex items-center gap-2 text-[29px] text-black"
         >
-          <img src="/Polygon.png" alt="Back" className="w-4 h-4 sm:w-15 sm:h-15" />
+          <img src="/Polygon.png" alt="Back" className="w-12 h-12" />
           POS
         </button>
 
-        <span className="font-bold text-[45px]  text-black">
+        <span className="font-bold text-[48px] text-black">
           View Previous Invoice
         </span>
 
-        <button className="flex items-center gap-2 md:text-[32px] font-medium text-black opacity-50">
+        <button className="flex items-center gap-2 text-[29px] text-black opacity-50">
           POS
-          <img src="/Polygon 2.png" alt="Next" className="w-4 h-4 sm:w-15 sm:h-15" />
+          <img src="/Polygon 2.png" alt="Next" className="w-12 h-12" />
         </button>
       </div>
 
-      {/* TABLE */}
-      <div className="w-420 h-250 bg-[#2F2F2F] rounded-[10px] overflow-hidden mb-6">
+      {/* SEARCH BAR */}
+      <div className="w-full max-w-[1100px] bg-white rounded-full flex items-center px-8 py-5 mb-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] border-2 border-white/20 shrink-0">
+        <img src="/search.png" alt="Search" className="w-12 h-12 mr-6 opacity-60" />
+        <input
+          type="text"
+          placeholder="Search Invoices..."
+          className="w-full bg-transparent outline-none text-[35px] text-black placeholder:text-gray-400 font-medium"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-        {/* HEADER */}
-        <div className="grid grid-cols-8 text-[30px]  text-white bg-[#3A3A3A] px-3 sm:px-4 py-3 sm:py-4 font-semibold">
-          <div>Invoice No</div>
-          <div>Created</div>
-          <div>Created By</div>
-          <div>Created For</div>
-          <div>Value</div>
-          <div>Paid Amount</div>
-          <div>Status</div>
-          <div>Action</div>
-        </div>
+      {/* TABLE CONTAINER */}
+      <div className="w-full flex-1 flex flex-col items-center overflow-hidden mb-8">
+        <div className="w-full max-w-[1100px] h-full overflow-x-auto border border-white/20 rounded-[30px] bg-[#2F2F2F] shadow-2xl flex flex-col">
 
-        {/* BODY */}
-        <div className=" sm:h-[60vh] overflow-y- text-[25px]  text-white">
+          {/* HEADER */}
+          <div className="min-w-[1200px] grid grid-cols-8 text-[28px] text-white bg-[#3A3A3A] px-4 py-6 font-bold sticky top-0">
+            <div className="truncate text-center">Invoice No</div>
+            <div className="truncate text-center">Created</div>
+            <div className="truncate text-center">Created By</div>
+            <div className="truncate text-center">Created For</div>
+            <div className="truncate text-center">Value</div>
+            <div className="truncate text-center">Paid Amount</div>
+            <div className="truncate text-center">Status</div>
+            <div className="truncate text-center">Action</div>
+          </div>
 
-          {loading && (
-            <div className="text-center py-6">Loading...</div>
-          )}
+          {/* BODY */}
+          <div className="min-w-[1200px] flex-1 overflow-y-auto">
 
-          {!loading && paginatedInvoices.length === 0 && (
-            <div className="text-center py-6">No invoices found</div>
-          )}
+            {loading && (
+              <div className="text-center py-10 text-[35px] text-white">Loading...</div>
+            )}
 
-          {paginatedInvoices.map((inv) => (
-            <div
-              key={inv.id}
-              className="grid grid-cols-8 px-3 sm:px-4 py-3 sm:py-4 border-b border-white/10 hover:bg-white/5 transition-colors"
-            >
-              <div className="font-medium">INV{inv.id}</div>
+            {!loading && paginatedInvoices.length === 0 && (
+              <div className="text-center py-10 text-[35px] text-white/50">No invoices found</div>
+            )}
 
-              <div>
-                {new Date(inv.created_at).toLocaleDateString()}
-                <br />
-                {new Date(inv.created_at).toLocaleTimeString()}
+            {paginatedInvoices.map((inv) => (
+              <div
+                key={inv.id}
+                className="grid grid-cols-8 px-4 py-4 border-b border-white/10 hover:bg-white/5 transition-colors text-[24px] text-white items-center"
+              >
+                <div className="font-medium text-center truncate">{inv.invoice_no || `INV-${inv.id}`}</div>
+
+                <div className="text-center leading-tight">
+                  {new Date(inv.created_at).toLocaleDateString()}
+                  <br />
+                  <span className="text-[20px] opacity-70">{new Date(inv.created_at).toLocaleTimeString()}</span>
+                </div>
+
+                <div className="text-center truncate">
+                  {inv.created_user
+                    ? `${inv.created_user.first_name} ${inv.created_user.last_name}`
+                    : inv.created_user_id}
+                </div>
+
+                <div className="font-semibold text-center truncate">
+                  {inv.created_user
+                    ? `${inv.created_user.first_name} ${inv.created_user.last_name}`
+                    : "-"}
+                </div>
+
+                <div className="font-semibold text-center truncate">
+                  {parseFloat(inv.total_amount || "0").toFixed(2)}
+                </div>
+
+                <div className="font-semibold text-center truncate">
+                  {parseFloat(inv.paid_amount || "0").toFixed(2)}
+                </div>
+
+                <div className="text-center truncate">{inv.status}</div>
+
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setShowRecallConfirm(true)}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full text-[20px] font-bold hover:from-blue-600 hover:to-blue-800 transition-all shadow-md"
+                  >
+                    Recall
+                  </button>
+                </div>
               </div>
-
-              <div>
-                {inv.created_user
-                  ? `${inv.created_user.first_name} ${inv.created_user.last_name}`
-                  : inv.created_user_id}
-              </div>
-
-              <div className="font-semibold">
-                {inv.created_user
-                  ? `${inv.created_user.first_name} ${inv.created_user.last_name}`
-                  : "-"}
-              </div>
-
-              <div className="font-semibold">
-                {inv.total_amount ?? "-"}
-              </div>
-
-              <div className="font-semibold">
-                {inv.paid_amount ?? "-"}
-              </div>
-
-              <div>{inv.status}</div>
-
-              <div>
-                <button
-                  onClick={() => setShowRecallConfirm(true)}
-                  className="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full text-[9px] sm:text-xs font-semibold hover:from-blue-600 hover:to-blue-800 transition-all"
-                >
-                  Recall
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
-
-      <div className="ml-[-1450px] mb-10px text-white">
       {/* PAGINATION */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
-</div>
+      <div className="shrink-0 mb-8 scale-[1.5] text-white">
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
+      </div>
+
       {/* MODAL */}
       {showRecallConfirm && (
         <RecallInvoiceConfirm
@@ -178,7 +210,7 @@ const ViewPreviousInvoice = ({ goBack }: ViewPreviousInvoiceProps) => {
           onClose={() => setShowRecallConfirm(false)}
         />
       )}
-      
+
     </div>
   );
 };

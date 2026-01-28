@@ -1,6 +1,7 @@
 // src/api/items.ts
 export interface InvoiceItem {
   id: number;
+  stockId?: number;
   sku: string;
   name: string;
   description: string;

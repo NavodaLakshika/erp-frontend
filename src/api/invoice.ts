@@ -10,7 +10,8 @@ export const createInvoice = (data: {
   total_amount: number;
   discount_type?: string;
   discount_amount?: number;
-  box_quantity?: number;
+  next_box_number?: number;
+  created_user_id?: number;
 }) => api.post("/pos/invoice", data);
 
 

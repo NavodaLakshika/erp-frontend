@@ -10,39 +10,57 @@ interface AddCustomerProps {
 const ITEMS_PER_PAGE = 10;
 
 const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Customer | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  const loadCustomers = async () => {
-    try {
-      setLoading(true);
-      const res = await getCustomers(currentPage, ITEMS_PER_PAGE);
-
-      setCustomers(res.data.data);
-      setTotalPages(Math.ceil(res.data.total / res.data.limit));
-    } catch (e) {
-      console.error("Error loading customers:", e);
-      alert("Failed to load customers");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reload when page changes
+  // Load all customers on mount
   useEffect(() => {
-    loadCustomers();
-  }, [currentPage]);
+    const loadAllCustomers = async () => {
+      try {
+        setLoading(true);
+        const res = await getCustomers(1, 1000); // Load up to 1000 customers
+        setAllCustomers(res.data.data || []);
+      } catch (e) {
+        console.error("Error loading customers:", e);
+        setAllCustomers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Reset page & debounce search
+    loadAllCustomers();
+  }, []);
+
+  // Filter customers based on search
+  const filteredCustomers = allCustomers.filter((customer) =>
+    customer.id.toString().includes(search) ||
+    `${customer.first_name || ''} ${customer.last_name || ''}`
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+    (customer.address && customer.address.toLowerCase().includes(search.toLowerCase())) ||
+    (customer.telephone && customer.telephone.toLowerCase().includes(search.toLowerCase())) ||
+    (customer.description && customer.description.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  // Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
-    const delay = setTimeout(loadCustomers, 400);
-    return () => clearTimeout(delay);
   }, [search]);
+
+  // Calculate pagination
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE)
+  );
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedCustomers = filteredCustomers.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   const handleSelect = () => {
     if (!selected) return;
@@ -51,7 +69,7 @@ const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -59,68 +77,63 @@ const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
       />
 
       {/* Modal */}
-      <div className="relative w-[1600px] h-[1000px] bg-[#D9D9D9] rounded-3xl p-10 shadow-2xl">
+      <div className="relative w-[1200px] max-h-[1920px] bg-[#D9D9D9] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col overflow-hidden">
 
-        {/* Search */}
-        <div className="flex items-center bg-white rounded-full px-10 py-5 mb-10">
-          <img
-            src="/add-customer-search.png"
-            alt="Search Customer"
-            className="w-16 h-16 mr-5"
-          />
+        <div className="w-full bg-white rounded-full flex items-center px-8 py-5 mb-8 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] border-2 border-white/20 flex-shrink-0">
+          <img src="/search.png" alt="Search" className="w-12 h-12 mr-6 opacity-60" />
           <input
+            type="text"
+            placeholder="Search Customer..."
+            className="w-full bg-transparent outline-none text-[35px] text-black placeholder:text-gray-400 font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search Customer..."
-            className="w-full h-25 outline-none bg-transparent text-[42px] placeholder:text-gray-500"
           />
         </div>
 
         {/* Table */}
-        <div className="h-[650px] bg-[#BFBABA] rounded-3xl overflow-hidden border-2 border-black/30">
-          <div className="grid grid-cols-5 bg-[#9FA8DA] font-semibold text-black text-[42px]">
-            <div className="p-8 border-r-2 border-b-2 border-black/30 text-center">#</div>
-            <div className="p-8 border-r-2 border-b-2 border-black/30 text-center">Customer Name</div>
-            <div className="p-8 border-r-2 border-b-2 border-black/30 text-center">Address</div>
-            <div className="p-8 border-r-2 border-b-2 border-black/30 text-center">Phone</div>
-            <div className="p-8 border-b-2 border-black/30 text-center">Description</div>
+        <div className="flex-1 bg-[#BFBABA] rounded-3xl overflow-hidden border-2 border-black/30 flex flex-col mb-4 sm:mb-6 min-h-0">
+          <div className="grid grid-cols-5 bg-[#9FA8DA] font-semibold text-black text-[16px] sm:text-[22px] md:text-[26px] flex-shrink-0">
+            <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/30 text-center">#</div>
+            <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/30 text-center">Customer Name</div>
+            <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/30 text-center">Address</div>
+            <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/30 text-center">Phone</div>
+            <div className="px-2 sm:px-3 py-2 sm:py-3 border-b-2 border-black/30 text-center">Description</div>
           </div>
 
-          <div className="h-[500px] overflow-y-auto bg-white/30">
+          <div className="flex-1 overflow-y-auto bg-white/30 min-h-0">
             {loading && (
-              <div className="text-center py-20 text-[42px] text-gray-600">Loading...</div>
+              <div className="text-center py-8 sm:py-12 text-[24px] sm:text-[30px] text-gray-600">Loading...</div>
             )}
 
-            {!loading && customers.length === 0 && (
-              <div className="text-center py-20 text-[42px] text-gray-600">
-                No customers found
+            {!loading && paginatedCustomers.length === 0 && (
+              <div className="text-center py-8 sm:py-12 text-[24px] sm:text-[30px] text-gray-600">
+                {filteredCustomers.length === 0 ? "No customers found" : "No results for your search"}
               </div>
             )}
 
-            {customers.map((c, i) => (
+            {paginatedCustomers.map((c, i) => (
               <div
                 key={c.id}
                 onClick={() => setSelected(c)}
-                className={`grid grid-cols-5 cursor-pointer text-[38px]
-                  ${
-                    selected?.id === c.id
-                      ? "bg-green-300"
-                      : "hover:bg-white/40"
+                className={`grid grid-cols-5 cursor-pointer text-[14px] sm:text-[18px] md:text-[22px] transition-colors
+                  ${selected?.id === c.id
+                    ? "bg-green-300"
+                    : "hover:bg-white/40"
                   }`}
               >
-                <div className="p-8 border-r-2 border-b-2 border-black/20 text-center">
-                  {i + 1 + (currentPage - 1) * ITEMS_PER_PAGE}
+                <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/20 text-center">
+                  {startIndex + i + 1}
                 </div>
-                <div className="p-8 border-r-2 border-b-2 border-black/20 text-center">
+                <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/20 text-center truncate">
                   {c.first_name} {c.last_name}
                 </div>
-                <div className="p-8 border-r-2 border-b-2 border-black/20 text-center">
+                <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/20 text-center truncate">
                   {c.address || "-"}
                 </div>
-                <div className="p-8 border-r-2 border-b-2 border-black/20 text-center">
+                <div className="px-2 sm:px-3 py-2 sm:py-3 border-r-2 border-b-2 border-black/20 text-center truncate">
                   {c.telephone || "-"}
                 </div>
-                <div className="p-8 border-b-2 border-black/20 text-center truncate">
+                <div className="px-2 sm:px-3 py-2 sm:py-3 border-b-2 border-black/20 text-center truncate">
                   {c.description || "-"}
                 </div>
               </div>
@@ -129,7 +142,7 @@ const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-10">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 flex-shrink-0">
           {/* Pagination */}
           <div className="flex justify-center text-black">
             <Pagination
@@ -140,10 +153,10 @@ const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-10">
+          <div className="flex gap-4 sm:gap-6">
             <button
               onClick={onClose}
-              className="px-16 h-20 bg-gray-300 rounded-full text-[35px] hover:bg-gray-400 transition-colors min-w-[180px]"
+              className="px-8 sm:px-12 h-14 sm:h-16 bg-gray-300 rounded-full text-[20px] sm:text-[28px] hover:bg-gray-400 transition-colors min-w-[140px] sm:min-w-[160px]"
             >
               Cancel
             </button>
@@ -151,7 +164,7 @@ const AddCustomer = ({ onClose, onSelect }: AddCustomerProps) => {
             <button
               disabled={!selected}
               onClick={handleSelect}
-              className="px-16 h-20 bg-gradient-to-b from-[#05522B] to-[#023618] text-white rounded-full text-[35px] disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#06622B] hover:to-[#034618] transition-all min-w-[180px]"
+              className="px-8 sm:px-12 h-14 sm:h-16 bg-gradient-to-b from-[#05522B] to-[#023618] text-white rounded-full text-[20px] sm:text-[28px] disabled:opacity-50 disabled:cursor-not-allowed hover:from-[#06622B] hover:to-[#034618] transition-all min-w-[140px] sm:min-w-[160px]"
             >
               Select
             </button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RecallInvoice from "./RecallInvoice";
 import CancelInvoiceConfirm from "./CancelInvoiceConfirm";
 import AddCustomer from "./AddCustomer";
@@ -96,14 +96,37 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
     setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
   };
 
+  /* ================= AUTO GENERATE INVOICE NO ================= */
+  useEffect(() => {
+    if (!lastCreatedInvoiceNo && selectedCustomer && invoiceItems.length > 0 && invoiceNumber === "AUTO") {
+      const timestamp = Math.floor(Date.now() / 1000).toString().slice(-4);
+      setInvoiceNumber(`INV-${timestamp}`);
+    }
+    else if (!lastCreatedInvoiceNo && (!selectedCustomer || invoiceItems.length === 0) && invoiceNumber !== "AUTO") {
+      setInvoiceNumber("AUTO");
+    }
+  }, [selectedCustomer, invoiceItems, invoiceNumber, lastCreatedInvoiceNo]);
+
   const handleRecallInvoice = (invoice: any) => {
-    console.log("Recalled invoice:", invoice);
+    console.log("Recalled invoice for state update:", invoice);
     setPreviousInvoiceId(invoice.id);
     setInvoiceNumber(invoice.invoice_no || `INV-${invoice.id}`);
+    setLastCreatedInvoiceNo(null); // Clear last created so recalled number shows
     setSelectedCustomer(invoice.customer || null);
-    setInvoiceItems(invoice.invoice_items || []);
-    setPaidAmount(invoice.paid_amount || 0);
-    setDiscountAmount(invoice.discount_amount || 0);
+
+    // Map backend invoice_items to frontend InvoiceItem structure
+    const mappedItems = (invoice.invoice_items || []).map((item: any) => ({
+      id: item.stock_id || item.id,
+      sku: item.stock?.sku || item.sku || "N/A",
+      name: item.stock?.name || item.name || "Unknown Item",
+      description: item.stock?.description || item.description || "",
+      unitPrice: Number(item.selling_price || item.unitPrice || 0),
+      qty: Number(item.quantity || item.qty || 0)
+    }));
+
+    setInvoiceItems(mappedItems);
+    setPaidAmount(Number(invoice.paid_amount || 0));
+    setDiscountAmount(Number(invoice.discount_amount || 0));
     setQty(invoice.next_box_number?.toString() || "0");
     setShowRecall(false);
   };
@@ -130,26 +153,27 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
       // Parse qty to number, default to 0 if empty/invalid
       const boxQty = parseInt(qty) || 0;
 
-      const invoicePayload = {
+      const invoicePayload: any = {
         customer_id: selectedCustomer.id,
         created_user_id: userId,
         status: "PENDING",
         previous_invoice_id: previousInvoiceId || null,
-        paid_amount: paidAmount,
         total_amount: totalAmount,
         discount_type: discountType.toUpperCase(),
-        discount_amount: discountAmount,
         next_box_number: boxQty
       };
+
+      if (paidAmount > 0) invoicePayload.paid_amount = paidAmount;
+      if (discountAmount > 0) invoicePayload.discount_amount = discountAmount;
 
       console.log("Creating invoice with payload:", invoicePayload);
 
       const invoiceResponse = await createInvoice(invoicePayload);
-      
+
       console.log("Invoice creation response:", invoiceResponse);
 
       const responseData = invoiceResponse.data?.data || invoiceResponse.data;
-      
+
       if (!responseData) {
         throw new Error("No response data from server");
       }
@@ -167,10 +191,10 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
 
       const itemPromises = invoiceItems.map(async (item) => {
         const itemPayload = {
-          stock_id: item.id,
+          stock_id: item.stockId || item.id,
           quantity: item.qty,
           selling_price: item.unitPrice,
-          discount_type: discountType.toUpperCase(),
+          discount_type: discountType,
           discount_amount: 0
         };
         console.log("Adding invoice item:", itemPayload);
@@ -182,7 +206,7 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
       await sendInvoice(newInvoiceId);
 
       alert(`Invoice #${newInvoiceNo} sent to cashier successfully!`);
-      
+
       // Reset form but keep the invoice number displayed
       setInvoiceItems([]);
       setSelectedCustomer(null);
@@ -196,8 +220,8 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
     } catch (error: any) {
       console.error("Invoice creation error:", error);
       const errorMessage = error?.response?.data?.message ||
-                          error?.message ||
-                          "Failed to send invoice. Please try again.";
+        error?.message ||
+        "Failed to send invoice. Please try again.";
       alert(`Error: ${errorMessage}`);
     }
   };
@@ -236,116 +260,122 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
     }
   };
 
-  // Display invoice number - show last created if exists, otherwise show AUTO
-  const displayInvoiceNumber = lastCreatedInvoiceNo || invoiceNumber;
+  // Display invoice number - priority: lastCreated > currentDraft > AUTO
+  const getDisplayNo = () => {
+    if (lastCreatedInvoiceNo) return `SENT: ${lastCreatedInvoiceNo}`;
+    if (invoiceNumber && invoiceNumber !== "AUTO") return ` ${invoiceNumber}`;
+    return "AUTO";
+  };
+  const displayInvoiceNumber = getDisplayNo();
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-5">
+    <div className="w-[1200px] h-[1920px] bg-black flex flex-col items-center p-10 mx-auto overflow-hidden">
       {/* Top Bar */}
-      <div className="w-[1000px] bg-[#D9D9D9] rounded-full flex items-center justify-between px-4 sm:px-6 py-8 mb-4 sm:mb-3">
+      {/* Top Bar */}
+      <div className="w-full bg-[#D9D9D9] rounded-full flex items-center justify-between px-6 py-8 mb-4">
         <button
           onClick={goBack}
-          className="flex items-center gap-2 text-sm sm:text-base md:text-[29px] text-black"
+          className="flex items-center gap-2 text-[29px] text-black"
         >
-          <img src="/Polygon.png" alt="Back" className="w-5 h-5 sm:w-12 sm:h-12" />
+          <img src="/Polygon.png" alt="Back" className="w-12 h-12" />
           POS
         </button>
-        <span className="font-bold text-lg sm:text-xl md:text-[48px] text-black">
+        <span className="font-bold text-[48px] text-black">
           Create New Invoice
         </span>
-        <button className="flex items-center gap-2 text-sm sm:text-base md:text-[29px] text-black opacity-50">
+        <button className="flex items-center gap-2 text-[29px] text-black opacity-50">
           POS
-          <img src="/Polygon 2.png" alt="Next" className="w-5 h-5 sm:w-12 sm:h-12" />
+          <img src="/Polygon 2.png" alt="Next" className="w-12 h-12" />
         </button>
       </div>
 
       {/* Main Content */}
-      <div className="w-full max-w-2xl">
+      <div className="w-full flex-1 flex flex-col items-center max-w-[1100px]">
         {/* Action Buttons Row */}
-        <div className="w-240 ml-[-140px] flex sm:flex-row gap-3 sm:gap-5 sm:mb-3 items-center justify-center">
+        <div className="w-full flex items-center justify-center gap-6 mb-8">
           <button
             onClick={() => setShowRecall(true)}
-            className="sm:w-205 h-15 sm:h-30 bg-gradient-to-b from-[#9BF5AD] via-[#4AED80] to-[#053E0A] text-white rounded-full font-bold text-sm sm:text-base md:text-[35px]"
+            className="w-[530px] h-[100px] bg-gradient-to-b from-[#9BF5AD] via-[#4AED80] to-[#053E0A] text-white rounded-full font-bold text-[35px] hover:scale-105 transition-transform"
           >
             Recall Invoice
           </button>
 
           <button
             onClick={() => setShowCancelConfirm(true)}
-            className="sm:w-205 h-12 sm:h-30 bg-gradient-to-b from-[#F59B9B] via-[#ED654A] to-[#3B0202] text-white rounded-full font-medium text-sm sm:text-base md:text-[35px]"
+            className="w-[530px] h-[100px] bg-gradient-to-b from-[#F59B9B] via-[#ED654A] to-[#3B0202] text-white rounded-full font-bold text-[35px] hover:scale-105 transition-transform"
           >
             Cancel Invoice
           </button>
         </div>
 
         {/* Customer & Info Card */}
-        <div className="sm:w-240 sm:h-90 bg-gradient-to-b from-[#D9D9D9] via-[#827E7E] to-[#676464] rounded-[40px] p-3 sm:p-4 mb-4 sm:mb-3 ml-[-145px]">
-          <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-4">
-            {/* Customer Buttons */}
-            <div className="flex flex-row gap-3 sm:gap-4">
+        <div className="w-full bg-gradient-to-b from-[#D9D9D9] via-[#827E7E] to-[#676464] rounded-[50px] p-8 mb-8 shadow-2xl">
+          <div className="flex flex-row gap-8">
+            {/* Customer Buttons - Left Side */}
+            <div className="flex flex-row gap-6">
               <button
                 onClick={() => setShowAddCustomer(true)}
-                className="flex-1 sm:w-35 sm:h-83 bg-gradient-to-b from-[#9BF5A3] via-[#72ED4A] to-[#023B06] text-white rounded-[50px] font-medium flex flex-col items-center justify-center gap-2"
+                className="w-[180px] h-[300px] bg-gradient-to-b from-[#9BF5A3] via-[#72ED4A] to-[#023B06] text-white rounded-[40px] font-medium flex flex-col items-center justify-center gap-4 hover:brightness-110 transition-all"
               >
                 <img
                   src="/lets-icons_user-alt-fill.png"
                   alt="Add Customer"
-                  className="w-8 h-8 sm:w-35 sm:h-35"
+                  className="w-35 h-35"
                 />
-                <span className="text-xs sm:text-[30px] text-center">
+                <span className="text-[30px] text-center leading-tight">
                   Add<br />Customer
                 </span>
               </button>
 
               <button
                 onClick={() => setShowCreateCustomer(true)}
-                className="flex-1 sm:w-80 sm:h-83 bg-gradient-to-b from-[#A19BF5] via-[#4A5DED] to-[#02043B] text-white rounded-[50px] font-medium flex flex-col items-center justify-center gap-2"
+                className="w-[180px] h-[300px] bg-gradient-to-b from-[#A19BF5] via-[#4A5DED] to-[#02043B] text-white rounded-[40px] font-medium flex flex-col items-center justify-center gap-4 hover:brightness-110 transition-all"
               >
                 <img
                   src="/typcn_user-add.png"
                   alt="Create Customer"
-                  className="w-8 h-8 sm:w-35 sm:h-35 ml-5"
+                  className="w-35 h-35 ml-5"
                 />
-                <span className="text-xs sm:text-[30px] text-center">
+                <span className="text-[30px] text-center leading-tight">
                   Create<br />Customer
                 </span>
               </button>
             </div>
 
             {/* Right Side Info */}
-            <div className="flex-1 text-xs sm:text-[29px] text-white ml-15 mt-10">
-              {/* Bill For - Customer Name */}
-              <div className="flex flex-col sm:flex-row mb-2">
-                <span className="font-semibold w-24 sm:w-28">Bill For</span>
-                <span>
-                  :{" "}
-                  <span className="text-blue-700 font-bold">
-                    {selectedCustomer
-                      ? `${selectedCustomer.first_name || ''} ${selectedCustomer.last_name || ''}`.trim()
-                      : "Select Customer"}
-                  </span>
+            <div className="flex-1 flex flex-col justify-center text-[38px] text-white pl-8 space-y-4">
+              {/* Bill For */}
+              <div className="flex items-baseline">
+                <span className="font-semibold w-48 shrink-0">Bill For</span>
+                <span className="mr-2">:</span>
+                <span className="text-blue-800 font-bold truncate">
+                  {selectedCustomer
+                    ? `${selectedCustomer.first_name || ''} ${selectedCustomer.last_name || ''}`.trim()
+                    : "Select Customer"}
                 </span>
               </div>
-              
-              {/* Bill No - Invoice Number */}
-              <div className="flex flex-col sm:flex-row mb-2">
-                <span className="font-semibold w-24 sm:w-28">Bill No</span>
-                <span>: <span className="text-blue-700 font-bold">{displayInvoiceNumber}</span></span>
+
+              {/* Bill No */}
+              <div className="flex items-baseline">
+                <span className="font-semibold w-48 shrink-0">Bill No</span>
+                <span className="mr-2">:</span>
+                <span className="text-blue-800 font-bold">{displayInvoiceNumber}</span>
               </div>
 
-              {/* Billing by - User Name */}
-              <div className="flex flex-col sm:flex-row mb-3 sm:mb-4">
-                <span className="font-semibold w-24 sm:w-28">Billing by</span>
-                <span>: <span className="text-blue-700 font-bold">{getUserNameFromToken()}</span></span>
+              {/* Billing by */}
+              <div className="flex items-baseline">
+                <span className="font-semibold w-48 shrink-0">Billing by</span>
+                <span className="mr-2">:</span>
+                <span className="text-blue-800 font-bold">{getUserNameFromToken()}</span>
               </div>
 
-              {/* Bag/Box Quantity - With typeable input AND + - buttons */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <span className="font-semibold w-28">Bag/Box Quantity</span>
-                <div className="flex items-center bg-[#D9D9D9] rounded-lg px-2 py-1 gap-2 shadow">
+              {/* Bag/Box Quantity */}
+              <div className="flex items-center mt-2">
+                <span className="font-semibold w-48 shrink-0">Bag/Box Qty</span>
+                <div className="flex items-center bg-[#D9D9D9] rounded-xl px-3 py-2 gap-4 shadow-inner ml-4">
                   <button
                     onClick={decreaseQty}
-                    className="w-7 h-7 bg-red-700 text-white rounded flex items-center justify-center active:scale-95"
+                    className="w-12 h-12 bg-red-700 text-white rounded-lg flex items-center justify-center text-3xl font-bold hover:bg-red-600 active:scale-95 transition-all"
                   >
                     −
                   </button>
@@ -354,14 +384,14 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
                     type="text"
                     value={qty}
                     onChange={handleQtyChange}
-                    className="w-12 bg-transparent outline-none text-blue-700 font-bold text-center text-[18px]"
+                    className="w-24 bg-transparent outline-none text-blue-900 font-bold text-center text-[32px]"
                     placeholder="0"
                     maxLength={5}
                   />
 
                   <button
                     onClick={increaseQty}
-                    className="w-7 h-7 bg-green-700 text-white rounded flex items-center justify-center active:scale-95"
+                    className="w-12 h-12 bg-green-700 text-white rounded-lg flex items-center justify-center text-3xl font-bold hover:bg-green-600 active:scale-95 transition-all"
                   >
                     +
                   </button>
@@ -374,47 +404,56 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
         {/* Add Items Button */}
         <button
           onClick={() => setShowProducts(true)}
-          className="sm:w-230 sm:h-32 items-center ml-[-125px] justify-center bg-gradient-to-b from-[#807CFE] via-[#574AED] to-[#0A053E] text-white rounded-full font-bold text-sm sm:text-base md:text-[35px] mb-4 sm:mb-3"
+          disabled={!selectedCustomer}
+          className={`w-full h-[110px] rounded-full font-bold text-[35px] mb-8 transition-all shadow-lg flex items-center justify-center gap-4 ${!selectedCustomer
+            ? "bg-gray-500 cursor-not-allowed opacity-50"
+            : "bg-gradient-to-b from-[#807CFE] via-[#574AED] to-[#0A053E] text-white hover:scale-105 active:scale-95"
+            }`}
         >
-          Add Items To Invoice
+          {!selectedCustomer && <span>⚠️</span>}
+          {selectedCustomer ? "Add Items To Invoice" : "Please Select Customer First"}
         </button>
 
         {/* ITEMS TABLE */}
-        <div className="h-[70vh] sm:w-240 sm:h-[40vh] bg-[#2F2F2F] rounded-lg overflow-hidden mb-4 sm:mb-3 flex flex-col ml-[-155px]">
+        <div className="w-full flex-1 bg-[#2F2F2F] rounded-[30px] overflow-hidden mb-8 flex flex-col shadow-2xl border border-white/10">
           {/* Table Header */}
-          <div className="grid grid-cols-7 gap-4  sm:text-[30px] text-white bg-[#3A3A3A] px-2 sm:px-3 py-2 ">
-            <div>Item<br />No</div>
-            <div>SKU</div>
-            <div>Item Name</div>
-            <div>Description</div>
-            <div>Unit Price</div>
-            <div>Qty</div>
-            <div>Action</div>
+          <div className="grid grid-cols-7 gap-4 text-[28px] font-bold text-white bg-[#3A3A3A] px-6 py-4 border-b-2 border-white/20">
+            <div className="col-span-1">Item No</div>
+            <div className="col-span-1">SKU</div>
+            <div className="col-span-2">Item Name</div>
+            <div className="col-span-1 text-center">Price</div>
+            <div className="col-span-1 text-center">Qty</div>
+            <div className="col-span-1 text-center">Action</div>
           </div>
 
           {/* Table Body */}
-          <div className="flex-1 overflow-y-auto text-[20px] sm:text-[23px] text-white">
+          <div className="flex-1 overflow-y-auto">
             {invoiceItems.length === 0 ? (
-              <div className="text-center text-[30px] py-8 text-gray-400">
-                No items added. Click "Add Items To Invoice" to add products.
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
+                <div className="text-[80px] mb-4">🛒</div>
+                <div className="text-[35px]">No items added yet</div>
               </div>
             ) : (
               invoiceItems.map((item, i) => (
-                <div key={item.id} className="grid grid-cols-7 px-2 text-[25px] sm:px-3 py-2 border-b border-white/10">
-                  <div>{i + 1}</div>
-                  <div>{item.sku}</div>
-                  <div>{item.name}</div>
-                  <div className="truncate" title={item.description}>{item.description}</div>
-                  <div>${item.unitPrice.toFixed(2)}</div>
-                  <div className="flex items-center justify-center">
-                    <span className="px-2 py-1 border border-lime-400 rounded text-lime-400">
+                <div key={item.id} className="grid grid-cols-7 gap-4 px-6 py-4 text-[26px] text-white border-b border-white/10 items-center hover:bg-white/5 transition-colors">
+                  <div className="col-span-1 pl-4">{i + 1}</div>
+                  <div className="col-span-1">{item.sku}</div>
+                  <div className="col-span-2 flex flex-col">
+                    <span className="font-semibold truncate">{item.name}</span>
+                    <span className="text-[20px] text-gray-400 truncate">{item.description}</span>
+                  </div>
+                  <div className="col-span-1 text-center text-green-400 font-mono">
+                    LKR {item.unitPrice.toFixed(2)}
+                  </div>
+                  <div className="col-span-1 flex justify-center">
+                    <span className="px-4 py-1 bg-white/10 rounded-full text-white font-mono">
                       {item.qty}
                     </span>
                   </div>
-                  <div className="flex items-center justify-center">
+                  <div className="col-span-1 flex justify-center">
                     <button
                       onClick={() => handleRemoveItem(i)}
-                      className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-all"
+                      className="px-6 py-2 bg-red-600/80 text-white rounded-full text-[20px] hover:bg-red-600 transition-colors"
                     >
                       Remove
                     </button>
@@ -422,24 +461,27 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
                 </div>
               ))
             )}
-
-            {/* Empty rows if needed */}
-            {[...Array(Math.max(0, 12 - invoiceItems.length))].map((_, i) => (
-              <div key={`empty-${i}`} className="grid grid-cols-7 px-2 sm:px-3 py-3 border-b border-white/5">
-                {Array.from({ length: 7 }).map((_, c) => <div key={c}>&nbsp;</div>)}
-              </div>
-            ))}
           </div>
 
-          {/* Bottom Summary */}
-          <div className="flex w-full text-[10px] sm:text-[30px] font-semibold">
-            <div className="w-1/2 bg-[#1E40FF] text-white px-3 sm:px-4 py-2 sm:py-3">
-              Total Item count<br />- {itemCount}
+          {/* Bottom Summary Footer */}
+          <div className="flex w-full text-[32px] font-bold border-t-2 border-white/20">
+            <div className="w-1/2 bg-[#1E40FF] text-white px-8 py-6 flex flex-col justify-center">
+              <span>Total Item count</span>
+              <span className="text-[48px] leading-none mt-2">{itemCount}</span>
             </div>
-            <div className="w-1/2 bg-[#1F4D1F] text-white px-3 sm:px-4 py-2 sm:py-3 text-right">
-              <div>Subtotal: ${subtotal.toFixed(2)}</div>
-              <div>Discount: {discountType === "percentage" ? `${discountAmount}%` : `$${discountAmount.toFixed(2)}`}</div>
-              <div className="font-bold">Total: ${totalAmount.toFixed(2)}</div>
+            <div className="w-1/2 bg-[#1F4D1F] text-white px-8 py-6 flex flex-col items-end justify-center">
+              <div className="flex w-full justify-between mb-2 text-[28px] opacity-80">
+                <span>Subtotal:</span>
+                <span>LKR {subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex w-full justify-between mb-2 text-[28px] opacity-80">
+                <span>Discount:</span>
+                <span>{discountType === "percentage" ? `${discountAmount}%` : `LKR ${discountAmount.toFixed(2)}`}</span>
+              </div>
+              <div className="flex w-full justify-between text-[42px] border-t border-white/30 pt-2 mt-2">
+                <span>Total:</span>
+                <span className="text-yellow-300">LKR {totalAmount.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -448,10 +490,10 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
         <button
           onClick={() => setShowSendConfirm(true)}
           disabled={!selectedCustomer || invoiceItems.length === 0}
-          className="sm:w-230  sm:h-32 items-center ml-[-135px] justify-center bg-gradient-to-b from-[#7CFE96] via-[#4AED7B] to-[#053E13] text-white rounded-full font-bold text-sm sm:text-base md:text-[35px] flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-[110px] bg-gradient-to-b from-[#7CFE96] via-[#4AED7B] to-[#053E13] text-white rounded-full font-bold text-[40px] flex items-center justify-center gap-6 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform shadow-xl mb-8"
         >
           Send Invoice to cashier
-          <span className="text-lg sm:text-[32px]">➤</span>
+          <span className="text-[50px]">➤</span>
         </button>
       </div>
 
@@ -471,9 +513,9 @@ const CreateInvoice = ({ goBack }: CreateInvoiceProps) => {
         />
       )}
       {showProducts && (
-        <SelectProducts 
-          onClose={() => setShowProducts(false)} 
-          onAdd={handleAddProduct} 
+        <SelectProducts
+          onClose={() => setShowProducts(false)}
+          onAdd={handleAddProduct}
         />
       )}
       {showSendConfirm && (

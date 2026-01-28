@@ -18,7 +18,7 @@ interface Item {
   created_at: string;
 }
 
-const ITEMS_PER_PAGE = 5; // Show 5 items per page
+const ITEMS_PER_PAGE = 10; // Show 10 items per page
 
 const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
   const [items, setItems] = useState<Item[]>([]);
@@ -29,14 +29,14 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
   const [wholesalePrice, setWholesalePrice] = useState<string>("");
   const [sellingPrice, setSellingPrice] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
+  const [availableStock, setAvailableStock] = useState<number>(0);
+  const [selectedStockId, setSelectedStockId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
         setLoading(true);
         const res = await getItems(search);
-        console.log("Items API Response:", res.data);
         if (Array.isArray(res.data)) {
           setItems(res.data);
         } else if (res.data.data && Array.isArray(res.data.data)) {
@@ -72,55 +72,59 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
 
     try {
       const outletId = Number(localStorage.getItem("outlet_id")) || 1;
-
-      // Use the correct API endpoint for stocks by outlet
       const res = await getStocksByOutlet(outletId);
-      
-      // Check the actual response structure
-      console.log("Stocks API Response:", res.data);
-      
-      // The response might be nested in a data property
-      const stocksData = Array.isArray(res.data) ? res.data : 
-                       (res.data.data && Array.isArray(res.data.data)) ? res.data.data : 
-                       [];
-      
-      // Find stock for selected item
+
+      const stocksData = Array.isArray(res.data) ? res.data :
+        (res.data.data && Array.isArray(res.data.data)) ? res.data.data :
+          [];
+
       const stock = stocksData.find(
         (s: any) => s.item_id === item.id
       );
 
       if (!stock) {
-        alert("No stock available for this item");
+        alert("No stock found for this item in current outlet");
         setWholesalePrice("");
         setSellingPrice("");
+        setAvailableStock(0);
+        setSelectedStockId(null);
         return;
       }
 
-      // ✅ REAL PRICES FROM BACKEND - use buy_price for wholesale and stock_price/retail_price for selling
+      setAvailableStock(Number(stock.quantity || 0));
+      setSelectedStockId(stock.id);
       const wholesale = stock.buy_price || 0;
       const selling = stock.stock_price || stock.retail_price || 0;
-      
+
       setWholesalePrice(wholesale.toString());
       setSellingPrice(selling.toString());
 
     } catch (err) {
-      console.error("Failed to load stock price", err);
+      console.error("Failed to load stock data", err);
       setWholesalePrice("");
       setSellingPrice("");
+      setAvailableStock(0);
     }
   };
 
   const handleAddToInvoice = () => {
-    if (!selectedItem) {
-      alert("Please select an item first");
+    if (!selectedItem || !selectedStockId) {
+      alert("Please select an item with available stock first");
       return;
     }
 
     const qty = parseInt(quantity) || 1;
+
+    if (qty > availableStock) {
+      alert(`Insufficient stock! Available: ${availableStock}`);
+      return;
+    }
+
     const price = parseFloat(sellingPrice) || 0;
 
     const product = {
       id: selectedItem.id,
+      stockId: selectedStockId,
       sku: selectedItem.sku,
       name: selectedItem.name,
       description: selectedItem.description,
@@ -128,16 +132,16 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
       qty: qty
     };
 
-    // Call the parent's onAdd function
     onAdd(product);
-    
+
     // Reset form
     setSelectedItem(null);
+    setSelectedStockId(null);
     setQuantity("1");
     setSellingPrice("");
     setWholesalePrice("");
-    
-    // Show success message (optional)
+    setAvailableStock(0);
+
     alert("Product added to invoice!");
   };
 
@@ -160,7 +164,7 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* BACKDROP */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -168,40 +172,36 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
       />
 
       {/* MODAL */}
-      <div className="relative w-[1700px]  bg-[#D9D9D9] rounded-3xl sm:rounded-3xl p-6 sm:p-9 shadow-2xl overflow-y-auto">
+      <div className="relative w-[1200px] max-h-[1920px] bg-[#D9D9D9] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col overflow-hidden">
         {/* SEARCH */}
-        <div className="flex items-center bg-white rounded-[18px] px-6 sm:px-9 py-4.5 sm:py-4.5 mb-6 sm:mb-9">
-          <img
-            src="./search-products.png"
-            alt="Search"
-            className="mr-3 sm:mr-4.5 w-7.5 h-7.5 sm:w-9 sm:h-9"
-          />
+        <div className="w-full bg-white rounded-full flex items-center px-10 py-5 mb-8 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] border-2 border-white/20 flex-shrink-0">
+          <img src="/search.png" alt="Search" className="w-12 h-12 mr-6 opacity-60" />
           <input
             type="text"
             placeholder="Search Products..."
-            className="w-full h-12 outline-none bg-transparent placeholder:text-gray-500 text-[30px]"
+            className="w-full bg-transparent outline-none text-[35px] text-black placeholder:text-gray-400 font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         {/* TABLE */}
-        <div className="bg-[#A0A0A0] h-[500px] sm:rounded-3xl overflow-hidden">
+        <div className="flex-1 bg-[#A0A0A0] rounded-3xl overflow-hidden border-2 border-black/30 flex flex-col mb-4 sm:mb-6 min-h-0">
           {/* HEADER */}
-          <div className="grid grid-cols-5 bg-[#2F2F2F] font-semibold text-white px-4.5 sm:px-6 py-4.5 sm:py-6">
-            <div className="text-center sm:text-left text-[30px]">#</div>
-            <div className="text-center sm:text-left text-[30px]">SKU</div>
-            <div className="text-center sm:text-left text-[30px]">Description</div>
-            <div className="text-center sm:text-left text-[30px]">Item Name</div>
-            <div className="text-center sm:text-left text-[30px]">Outlet</div>
+          <div className="grid grid-cols-5 bg-[#2F2F2F] font-semibold text-white px-3 sm:px-4 py-2 sm:py-3 text-[16px] sm:text-[22px] md:text-[26px] flex-shrink-0">
+            <div className="text-center">#</div>
+            <div className="text-center">SKU</div>
+            <div className="text-center">Description</div>
+            <div className="text-center">Item Name</div>
+            <div className="text-center">Outlet</div>
           </div>
 
           {/* ROWS */}
-          <div className="h-[420px] overflow-y-auto">
-            {loading && <div className="text-center py-9 text-[30px]">Loading...</div>}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {loading && <div className="text-center py-8 sm:py-12 text-[24px] sm:text-[30px] text-gray-600">Loading...</div>}
 
             {!loading && items.length === 0 && (
-              <div className="text-center py-9 text-[30px]">No items found</div>
+              <div className="text-center py-8 sm:py-12 text-[24px] sm:text-[30px] text-gray-600">No items found</div>
             )}
 
             {!loading &&
@@ -211,51 +211,47 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
                   <div
                     key={item.id}
                     onClick={() => handleItemSelect(item)}
-                    className={`grid grid-cols-5 px-4.5 sm:px-6 py-4.5 sm:py-6 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer ${selectedItem?.id === item.id ? 'bg-blue-100' : ''}`}
+                    className={`grid grid-cols-5 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer text-[14px] sm:text-[18px] md:text-[22px] ${selectedItem?.id === item.id ? 'bg-blue-300' : ''}`}
                   >
-                    <div className="text-center sm:text-left text-[30px]">{globalIndex + 1}</div>
-                    <div className="text-center sm:text-left font-medium text-[30px]">{item.sku}</div>
-                    <div className="text-center sm:text-left text-[30px]">{item.description}</div>
-                    <div className="text-center sm:text-left text-[30px]">{item.name}</div>
-                    <div className="text-center sm:text-left text-[30px]">{item.origin}</div>
+                    <div className="text-center">{globalIndex + 1}</div>
+                    <div className="text-center font-medium truncate">{item.sku}</div>
+                    <div className="text-center truncate">{item.description}</div>
+                    <div className="text-center truncate">{item.name}</div>
+                    <div className="text-center truncate">{item.origin}</div>
                   </div>
                 );
               })}
           </div>
         </div>
 
-        {/* PAGINATION - UPDATED FOR WORKING PAGINATION */}
-        <div className="flex items-center mt-3">
-          <button 
+        {/* PAGINATION */}
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6 flex-shrink-0 overflow-x-auto">
+          <button
             onClick={goToPrevPage}
             disabled={currentPage === 1}
-            className="w-16 h-16 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black text-[30px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black text-[20px] sm:text-[24px] disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             ◀
           </button>
-          
+
           {/* Page Numbers */}
-          <div className="flex items-center mx-4">
-            {/* First page */}
+          <div className="flex items-center gap-1 sm:gap-2">
             {totalPages > 0 && (
               <button
                 onClick={() => goToPage(1)}
-                className={`w-12 h-12 mx-1 flex items-center justify-center rounded-full text-[24px] font-bold ${
-                  currentPage === 1 
-                    ? 'bg-gray-400 text-white' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-black'
-                }`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full text-[16px] sm:text-[20px] font-bold flex-shrink-0 ${currentPage === 1
+                  ? 'bg-gray-400 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-black'
+                  }`}
               >
                 1
               </button>
             )}
-            
-            {/* Ellipsis if needed */}
+
             {currentPage > 3 && totalPages > 5 && (
-              <span className="mx-2 text-[24px]">...</span>
+              <span className="text-[16px] sm:text-[18px]">...</span>
             )}
-            
-            {/* Middle pages */}
+
             {Array.from({ length: Math.min(3, totalPages - 2) }, (_, i) => {
               let pageNum;
               if (currentPage <= 2) {
@@ -265,17 +261,16 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
               } else {
                 pageNum = currentPage - 1 + i;
               }
-              
+
               if (pageNum > 1 && pageNum < totalPages) {
                 return (
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`w-12 h-12 mx-1 flex items-center justify-center rounded-full text-[24px] font-bold ${
-                      currentPage === pageNum 
-                        ? 'bg-gray-400 text-white' 
-                        : 'bg-gray-200 hover:bg-gray-300 text-black'
-                    }`}
+                    className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full text-[16px] sm:text-[20px] font-bold flex-shrink-0 ${currentPage === pageNum
+                      ? 'bg-gray-400 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-black'
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -283,123 +278,112 @@ const SelectProducts = ({ onClose, onAdd }: SelectProductsProps) => {
               }
               return null;
             })}
-            
-            {/* Ellipsis if needed */}
+
             {currentPage < totalPages - 2 && totalPages > 5 && (
-              <span className="mx-2 text-[24px]">...</span>
+              <span className="text-[16px] sm:text-[18px]">...</span>
             )}
-            
-            {/* Last page if there is more than 1 page */}
+
             {totalPages > 1 && (
               <button
                 onClick={() => goToPage(totalPages)}
-                className={`w-12 h-12 mx-1 flex items-center justify-center rounded-full text-[24px] font-bold ${
-                  currentPage === totalPages 
-                    ? 'bg-gray-400 text-white' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-black'
-                }`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full text-[16px] sm:text-[20px] font-bold flex-shrink-0 ${currentPage === totalPages
+                  ? 'bg-gray-400 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-black'
+                  }`}
               >
                 {totalPages}
               </button>
             )}
           </div>
-          
-          <span className="text-base sm:text-lg font-medium text-black mx-4.5 text-[24px]">
-            Page <span className="font-bold">{currentPage}</span> of <span className="font-bold">{totalPages || 1}</span>
+
+          <span className="text-[14px] sm:text-[16px] md:text-[18px] font-medium text-black mx-2 sm:mx-4 flex-shrink-0">
+            <span className="font-bold">{currentPage}</span> / <span className="font-bold">{totalPages || 1}</span>
           </span>
-          
-          <button 
+
+          <button
             onClick={goToNextPage}
             disabled={currentPage === totalPages || totalPages === 0}
-            className="w-16 h-16 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black text-[30px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-black text-[20px] sm:text-[24px] disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             ▶
           </button>
         </div>
 
-        {/* FORM - Responsive */}
-        <div className="flex flex-col items-end mt-6">
+        {/* FORM */}
+        <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-6 flex-shrink-0  ">
           {/* Selected Product */}
-          <div className="w-full sm:w-auto rounded-3xl sm:rounded-3xl p-4.5 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-[30px]">Selected:</span>
-                <span className="text-blue-700 font-bold text-[30px]">
-                  {selectedItem ? selectedItem.sku : "None"}
-                </span>
-              </div>
-              <div className="flex-1 flex items-center gap-3">
-                <input
-                  type="number"
-                  placeholder="Add quantity"
-                  className="w-full sm:w-[300px] bg-white px-4.5 sm:px-6 py-3 rounded-[21px] outline-none focus:ring-3 focus:ring-blue-500 text-[30px]"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  min="1"
-                />
-              </div>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="font-semibold text-[14px] sm:text-[18px] md:text-[22px] flex-shrink-0">Selected:</span>
+            <span className="text-blue-700 font-bold text-[14px] sm:text-[18px] md:text-[22px]">
+              {selectedItem ? selectedItem.sku : "None"}
+            </span>
+          </div>
+
+          {/* Quantity */}
+          <div className="flex items-center gap-3 sm:gap-4 ">
+            <span className="font-semibold text-[14px] sm:text-[18px] md:text-[22px] flex-shrink-0">Qty:</span>
+            <input
+              type="number"
+              placeholder="Qty"
+              className="w-20 sm:w-24 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-[12px] sm:text-[14px] md:text-[16px ml-20"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              min="1"
+            />
           </div>
 
           {/* Wholesale Price */}
-          <div className="w-full sm:w-auto rounded-3xl sm:rounded-3xl p-4.5 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-[30px]">Wholesale Price:</span>
-              </div>
-              <div className="flex-1 flex items-center gap-3">
-                <input
-                  type="number"
-                  placeholder="Enter wholesale price"
-                  className="w-full sm:w-[300px] bg-white px-4.5 sm:px-6 py-3 rounded-[21px] outline-none focus:ring-3 focus:ring-blue-500 text-[30px]"
-                  value={wholesalePrice}
-                  onChange={(e) => setWholesalePrice(e.target.value)}
-                  step="0.01"
-                />
-              </div>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="font-semibold text-[14px] sm:text-[18px] md:text-[22px] flex-shrink-0">Wholesale:</span>
+            <input
+              type="number"
+              placeholder="Price"
+              className="w-24 sm:w-28 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-[12px] sm:text-[14px] md:text-[16px] ml-3"
+              value={wholesalePrice}
+              onChange={(e) => setWholesalePrice(e.target.value)}
+              step="0.01"
+            />
+          </div>
+
+          {/* Available Stock */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="font-semibold text-[14px] sm:text-[18px] md:text-[22px] flex-shrink-0">Available Stock:</span>
+            <span className={`font-bold text-[14px] sm:text-[18px] md:text-[22px] ${availableStock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {availableStock}
+            </span>
           </div>
 
           {/* Selling Price */}
-          <div className="w-full sm:w-auto rounded-3xl sm:rounded-3xl p-4.5 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-[30px]">Selling Price:</span>
-              </div>
-              <div className="flex-1 flex items-center gap-3">
-                <input
-                  type="number"
-                  placeholder="Enter selling price"
-                  className="w-full sm:w-[300px] bg-white px-4.5 sm:px-6 py-3 rounded-[21px] outline-none focus:ring-3 focus:ring-blue-500 text-[30px]"
-                  value={sellingPrice}
-                  onChange={(e) => setSellingPrice(e.target.value)}
-                  step="0.01"
-                  required
-                />
-              </div>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="font-semibold text-[14px] sm:text-[18px] md:text-[22px] flex-shrink-0">Selling Price:</span>
+            <input
+              type="number"
+              placeholder="Price"
+              className="w-24 sm:w-28 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-[12px] sm:text-[14px] md:text-[16px] ml-[-6px]"
+              value={sellingPrice}
+              onChange={(e) => setSellingPrice(e.target.value)}
+              step="0.01"
+              required
+            />
           </div>
         </div>
 
         {/* FOOTER */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4.5 sm:gap-0 mt-6">
-          {/* Action Buttons */}
-          <div className="flex gap-4.5 sm:gap-6">
-            <button
-              onClick={onClose}
-              className="px-9 sm:px-12 h-15.5 sm:h-18.5 bg-gradient-to-b from-[#F59B9B] via-[#ED654A] to-[#3B0202] text-white rounded-full font-medium hover:from-[#F5ABAB] hover:to-[#ED755A] transition-all flex items-center gap-3 text-[30px]"
-            >
-              CANCEL
-            </button>
-            
-            <button
-              onClick={handleAddToInvoice}
-              disabled={!selectedItem}
-              className="px-9 sm:px-12 h-15.5 sm:h-18.5 bg-gradient-to-b from-[#0E7A2A] to-[#064C18] text-white rounded-full font-medium hover:from-[#0E8A2A] hover:to-[#065C18] transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-[30px]"
-            >
-              <span>ADD</span>
-            </button>
-          </div>
+        <div className="flex gap-4 sm:gap-6 justify-end flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="px-8 sm:px-12 h-14 sm:h-16 bg-gradient-to-b from-[#F59B9B] via-[#ED654A] to-[#3B0202] text-white rounded-full font-medium hover:from-[#F5ABAB] hover:to-[#ED755A] transition-all text-[18px] sm:text-[24px] md:text-[28px]"
+          >
+            CANCEL
+          </button>
+
+          <button
+            onClick={handleAddToInvoice}
+            disabled={!selectedItem}
+            className="px-8 sm:px-12 h-14 sm:h-16 bg-gradient-to-b from-[#0E7A2A] to-[#064C18] text-white rounded-full font-medium hover:from-[#0E8A2A] hover:to-[#065C18] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[18px] sm:text-[24px] md:text-[28px]"
+          >
+            ADD
+          </button>
         </div>
       </div>
     </div>

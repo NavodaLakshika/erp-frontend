@@ -5,9 +5,7 @@ import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <div className="app-scale">
       <App />
-    </div>
   </StrictMode>,
 )
 

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 .app-scale {
-  width: 1920px;        /* DESIGN WIDTH */
-  min-height: 1200px;   /* DESIGN HEIGHT */
+  width: 1200px;        /* DESIGN WIDTH */
+  min-height: 1920px;   /* DESIGN HEIGHT */
   transform: scale(0.625);
   transform-origin: top left;
 }

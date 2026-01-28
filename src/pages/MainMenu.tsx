@@ -34,104 +34,104 @@ function MainMenu() {
   if (showViewStock) return <ViewStock goBack={() => setShowViewStock(false)} />;
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center py-10">
-      <div className="w-full max-w-md">
-        <div className="bg-black rounded-lg p-8">
+    <div className="w-[1200px] h-[1920px] bg-black flex flex-col items-center justify-center p-10 mx-auto overflow-hidden">
 
-          <div className="flex justify-center mb-6">
-            {showSuccess && (
-              <div className="w-100 bg-green-700 text-white px-8 py-2.5 rounded-full text-[18px] font-medium text-center mb-4 mx-auto">
-                Login Successful!
-              </div>
-            )}
+      {/* Success Message */}
+      <div className="h-[60px] mb-8">
+        {showSuccess && (
+          <div className="bg-green-700 text-white px-12 py-4 rounded-full text-[28px] font-medium text-center animate-fade-in">
+            Login Successful!
           </div>
-
-          {username && (
-            <h2 className="text-white text-[40px] font-bold text-center mb-10">
-              Hello {username}!
-            </h2>
-          )}
-
-          {/* FIRST ROW */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-120 justify-items-center ml-[-50px]">
-           <MenuCard
-  title="Report Time"
-  bgColor={
-    activeCard === "report-time"
-      ? "bg-gradient-to-b from-[#8BA6FF] via-[#002FCA] to-[#002394]"
-      : "bg-white"
-  }
-  onClick={() => setActiveCard("report-time")}
-  icon={
-    <img
-      src="/report-time.png"
-      alt="Report Time"
-      className="h-65 object-contain mx-auto"
-    />
-  }
-/>
-
-           <MenuCard
-  title="Apply Leave"
-  bgColor={activeCard === "apply-leave" ? "bg-gradient-to-b from-[#8BA6FF] via-[#002FCA] to-[#002394]"
-    : "bg-white"
-  }
-  onClick={() => setActiveCard("apply-leave")}
-  icon={
-    <img
-      src="/leave.png"
-      alt="Apply Leave"
-      className="h-65 object-contain mx-auto"
-    />
-  }
-/>
-          </div>
-
-          {/* SECOND ROW */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-120 justify-items-center mt-15  ml-[-50px]">
-            <MenuCard
-              title="Point Of Sales"
-              onClick={() => {
-                setActiveCard("pos");
-                navigate("/pos");
-              }}
-              bgColor="bg-white"
-              icon={
-                <img
-                  src="/cashier.png"
-                  alt="Point Of Sales"
-                  className="h-65 object-contain mx-auto"
-                />
-              }
-            />
-
-            <MenuCard
-              title="View Stock"
-              onClick={() => {
-                setActiveCard("stock");
-                setShowViewStock(true);
-              }}
-              bgColor="bg-white"
-              icon={
-                <img
-                  src="/inventory.png"
-                  alt="View Stock"
-                  className="h-65 object-contain mx-auto"
-                />
-              }
-            />
-          </div>
-
-         
-        </div>
-         <button
-            onClick={handleLogout}
-            className="w-80 bg-red-700 text-white px-4 py-8 rounded-[40px] text-[35px] items-center mt-15 hover:bg-red-800 transition-colors justify-center flex mx-auto font-bold"
-          >
-            Logout
-          </button>
-
+        )}
       </div>
+
+      {/* Greeting */}
+      {username && (
+        <h2 className="text-white text-[60px] font-bold text-center mb-16">
+          Hello {username}!
+        </h2>
+      )}
+
+      {/* Menu Grid */}
+      <div className="grid grid-cols-2 gap-x-20 gap-y-16 mb-20">
+
+        {/* ROW 1 */}
+        <MenuCard
+          title="Report Time"
+          bgColor={
+            activeCard === "report-time"
+              ? "bg-gradient-to-b from-[#8BA6FF] via-[#002FCA] to-[#002394]"
+              : "bg-white"
+          }
+          onClick={() => setActiveCard("report-time")}
+          icon={
+            <img
+              src="/report-time.png"
+              alt="Report Time"
+              className="w-48 h-48 object-contain"
+            />
+          }
+        />
+
+        <MenuCard
+          title="Apply Leave"
+          bgColor={
+            activeCard === "apply-leave"
+              ? "bg-gradient-to-b from-[#8BA6FF] via-[#002FCA] to-[#002394]"
+              : "bg-white"
+          }
+          onClick={() => setActiveCard("apply-leave")}
+          icon={
+            <img
+              src="/leave.png"
+              alt="Apply Leave"
+              className="w-48 h-48 object-contain"
+            />
+          }
+        />
+
+        {/* ROW 2 */}
+        <MenuCard
+          title="Point Of Sales"
+          onClick={() => {
+            setActiveCard("pos");
+            navigate("/pos");
+          }}
+          bgColor="bg-white"
+          icon={
+            <img
+              src="/cashier.png"
+              alt="Point Of Sales"
+              className="w-[220px] h-[220px] object-contain"
+            />
+          }
+        />
+
+        <MenuCard
+          title="View Stock"
+          onClick={() => {
+            setActiveCard("stock");
+            setShowViewStock(true);
+          }}
+          bgColor="bg-white"
+          icon={
+            <img
+              src="/inventory.png"
+              alt="View Stock"
+              className="w-48 h-48 object-contain"
+            />
+          }
+        />
+      </div>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="w-[400px] h-[100px] bg-red-700 text-white rounded-[50px] text-[40px] font-bold hover:bg-red-800 transition-colors shadow-lg mt-8"
+      >
+        Logout
+      </button>
+
     </div>
   );
 }

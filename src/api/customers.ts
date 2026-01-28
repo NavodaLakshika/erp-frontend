@@ -47,6 +47,6 @@ export const createCustomer = (data: Omit<CreateCustomerPayload, "added_by">) =>
 };
 
 // Get customers list
-export const getCustomers = (page = 1, limit = 10) => {
-  return api.get("/pos/customers", { params: { page, limit } });
+export const getCustomers = (page = 1, limit = 10, search = "") => {
+  return api.get("/pos/customers", { params: { page, limit, search } });
 };
