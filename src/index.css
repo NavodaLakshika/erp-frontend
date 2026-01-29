@@ -1,12 +1,46 @@
 @import "tailwindcss";
 
-.app-scale {
-  width: 1200px;        /* DESIGN WIDTH */
-  min-height: 1920px;   /* DESIGN HEIGHT */
-  transform: scale(0.625);
-  transform-origin: top left;
+:root {
+  --app-width: 1200px;
+  --app-height: 1920px;
 }
+
+/* Reset and ensure body takes full screen */
 html,
 body {
-  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #1a1a1a;
+  /* Dark background for outside area */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: auto;
+  /* Allow horizontal scroll if window < 1200px */
 }
+
+#root {
+  width: var(--app-width);
+  height: var(--app-height);
+  min-width: var(--app-width);
+  min-height: var(--app-height);
+  max-width: var(--app-width);
+  max-height: var(--app-height);
+  background-color: #ffffff;
+  box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  /* Or auto if individual pages need to scroll beyond 1920px */
+  position: relative;
+  /* Centering is handled by body flex */
+}
+
+/* Ensure all images and elements stay within bounds by default */
+img {
+  max-width: none;
+  /* Allow absolute sizes used in the app */
+}
+
+/* Optional: if you want to scale the app for smaller screens, 
+   but the user said "lock it to this size" */
