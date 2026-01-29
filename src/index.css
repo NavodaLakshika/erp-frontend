@@ -3,22 +3,25 @@
 :root {
   --app-width: 1200px;
   --app-height: 1920px;
+  --app-scale: 1;
 }
 
-/* Reset and ensure body takes full screen */
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  background-color: #1a1a1a;
-  /* Dark background for outside area */
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  overflow: hidden;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  overflow-x: auto;
-  /* Allow horizontal scroll if window < 1200px */
+  align-items: center;
+  /* Center vertically */
 }
 
 #root {
@@ -26,21 +29,17 @@ body {
   height: var(--app-height);
   min-width: var(--app-width);
   min-height: var(--app-height);
-  max-width: var(--app-width);
-  max-height: var(--app-height);
-  background-color: #ffffff;
-  box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  /* Or auto if individual pages need to scroll beyond 1920px */
+  background-color: #000000;
+
+  /* Scaling transformation */
+  transform: scale(var(--app-scale));
+  transform-origin: center center;
+  /* Scale from center to keep it centered */
+
   position: relative;
-  /* Centering is handled by body flex */
+  flex-shrink: 0;
 }
 
-/* Ensure all images and elements stay within bounds by default */
 img {
   max-width: none;
-  /* Allow absolute sizes used in the app */
 }
-
-/* Optional: if you want to scale the app for smaller screens, 
-   but the user said "lock it to this size" */
